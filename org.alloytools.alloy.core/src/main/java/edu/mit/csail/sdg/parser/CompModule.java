@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -77,6 +78,7 @@ import edu.mit.csail.sdg.ast.ExprList;
 import edu.mit.csail.sdg.ast.ExprQt;
 import edu.mit.csail.sdg.ast.ExprUnary;
 import edu.mit.csail.sdg.ast.ExprVar;
+import edu.mit.csail.sdg.ast.FeatureScope;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Module;
 import edu.mit.csail.sdg.ast.ModuleReference;
@@ -91,6 +93,8 @@ import edu.mit.csail.sdg.ast.VisitReturn;
 /**
  * Mutable; this class represents an Alloy module; equals() uses object
  * identity.
+ *
+ * @modified Nuno Macedo, Chong Liu // [HASLab] electrum-colorful
  */
 
 public final class CompModule extends Browsable implements Module {
@@ -448,7 +452,7 @@ public final class CompModule extends Browsable implements Module {
             TempList<Expr> temp = new TempList<Expr>(x.args.size());
             for (int i = 0; i < x.args.size(); i++)
                 temp.add(visitThis(x.args.get(i)));
-            return ExprList.make(x.pos, x.closingBracket, x.op, temp.makeConst());
+            return ExprList.make(x.pos, x.closingBracket, x.op, temp.makeConst(), x.color); // [HASLab] colorful conditions
         }
 
         /** {@inheritDoc} */
@@ -457,7 +461,7 @@ public final class CompModule extends Browsable implements Module {
             Expr f = visitThis(x.cond);
             Expr a = visitThis(x.left);
             Expr b = visitThis(x.right);
-            return ExprITE.make(x.pos, f, a, b);
+            return ExprITE.make(x.pos, f, a, b, x.color); // [HASLab] colorful conditions
         }
 
         /** {@inheritDoc} */
@@ -496,7 +500,7 @@ public final class CompModule extends Browsable implements Module {
                     return x.op.make(x.pos, x.closingBracket, left, right);
                 return process(x.pos, x.closingBracket, right.pos, ((ExprChoice) right).choices, ((ExprChoice) right).reasons, left);
             }
-            return x.op.make(x.pos, x.closingBracket, left, right);
+            return x.op.make(x.pos, x.closingBracket, left, right, x.color); // [HASLab] colorful conditions
         }
 
         /** {@inheritDoc} */
@@ -508,7 +512,7 @@ public final class CompModule extends Browsable implements Module {
             put(left.label, left);
             Expr sub = visitThis(x.sub);
             remove(left.label);
-            return ExprLet.make(x.pos, left, right, sub);
+            return ExprLet.make(x.pos, left, right, sub, x.color); // [HASLab] colorful conditions
         }
 
         private boolean isOneOf(Expr x) {
@@ -587,8 +591,8 @@ public final class CompModule extends Browsable implements Module {
                 // typechecking when we see "all x:field$" or "some x:field$"
                 TempList<ExprVar> n = new TempList<ExprVar>(d.names.size());
                 for (ExprHasName v : d.names)
-                    n.add(ExprVar.make(v.pos, v.label, exp.type()));
-                Decl dd = new Decl(d.isPrivate, d.disjoint, d.disjoint2, n.makeConst(), exp);
+                    n.add(ExprVar.make(v.pos, v.label, exp.type(), d.color)); // [HASLab] colorful conditions 
+                Decl dd = new Decl(d.isPrivate, d.disjoint, d.disjoint2, n.makeConst(), exp, d.color); // [HASLab] colorful conditions
                 for (ExprHasName newname : dd.names)
                     put(newname.label, newname);
                 decls.add(dd);
@@ -601,13 +605,14 @@ public final class CompModule extends Browsable implements Module {
             for (Decl d : decls.makeConst())
                 for (ExprHasName v : d.names)
                     remove(v.label);
-            return x.op.make(x.pos, x.closingBracket, decls.makeConst(), sub);
+            return x.op.make(x.pos, x.closingBracket, decls.makeConst(), sub, x.color); // [HASLab] colorful conditions
         }
 
         /** {@inheritDoc} */
         @Override
         public Expr visit(ExprVar x) throws Err {
             Expr obj = resolve(x.pos, x.label);
+            obj.paint(x.color); // [HASLab] colorful conditions
             if (obj instanceof Macro) {
                 Macro macro = ((Macro) obj).copy();
                 Expr instantiated = macro.instantiate(this, warns);
@@ -1501,7 +1506,7 @@ public final class CompModule extends Browsable implements Module {
                     throw new ErrorSyntax(n.pos, "The sig \"" + n.label + "\" cannot be found.");
                 parents.add(resolveSig(res, topo, parentAST));
             }
-            realSig = new SubsetSig(fullname, parents, oldS.attributes.toArray(new Attr[0]));
+            realSig = new SubsetSig(fullname, parents, oldS.color, oldS.attributes.toArray(new Attr[0])); // [HASLab] colorful conditions
         } else {
             Sig sup = ((PrimSig) oldS).parent;
             Sig parentAST = u.getRawSIG(sup.pos, sup.label);
@@ -1511,7 +1516,7 @@ public final class CompModule extends Browsable implements Module {
             if (!(parent instanceof PrimSig))
                 throw new ErrorSyntax(sup.pos, "Cannot extend the subset signature \"" + parent + "\".\n" + "A signature can only extend a toplevel signature or a subsignature.");
             PrimSig p = (PrimSig) parent;
-            realSig = new PrimSig(fullname, p, oldS.attributes.toArray(new Attr[0]));
+            realSig = new PrimSig(fullname, p, oldS.color, oldS.attributes.toArray(new Attr[0])); // [HASLab] colorful conditions
         }
         res.new2old.put(realSig, oldS);
         res.sig2module.put(realSig, u);
@@ -1560,7 +1565,8 @@ public final class CompModule extends Browsable implements Module {
     }
 
     /** Add a FUN or PRED declaration. */
-    void addFunc(Pos p, Pos isPrivate, String n, Expr f, List<Decl> decls, Expr t, Expr v) throws Err {
+    // [HASLab] colorful, return element
+    Func addFunc(Pos p, Pos isPrivate, String n, Expr f, List<Decl> decls, Expr t, Expr v) throws Err {
         if (decls == null)
             decls = new ArrayList<Decl>();
         else
@@ -1589,6 +1595,7 @@ public final class CompModule extends Browsable implements Module {
             funcs.put(n, list);
         }
         list.add(ans);
+        return ans; // [HASLab] colorful, return element
     }
 
     /** Each FunAST will now point to a bodyless Func object. */
@@ -1819,8 +1826,8 @@ public final class CompModule extends Browsable implements Module {
     // ============================================================================================================================//
 
     /** Add a COMMAND declaration. */
-
-    void addCommand(boolean followUp, Pos pos, ExprVar name, boolean check, int overall, int bitwidth, int seq, int exp, List<CommandScope> scopes, ExprVar label) throws Err {
+    // [HASLab] colorful conditions
+    void addCommand(boolean followUp, Pos pos, ExprVar name, boolean check, int overall, int bitwidth, int seq, int exp, List<CommandScope> scopes, ExprVar label, FeatureScope p) throws Err {
         if (followUp && !Version.experimental)
             throw new ErrorSyntax(pos, "Syntax error encountering => symbol.");
         if (label != null)
@@ -1832,7 +1839,7 @@ public final class CompModule extends Browsable implements Module {
             throw new ErrorSyntax(pos, "Predicate/assertion name cannot contain \'@\'");
         String labelName = (label == null || label.label.length() == 0) ? name.label : label.label;
         Command parent = followUp ? commands.get(commands.size() - 1) : null;
-        Command newcommand = new Command(pos, name, labelName, check, overall, bitwidth, seq, exp, scopes, null, name, parent);
+        Command newcommand = new Command(pos, name, labelName, check, overall, bitwidth, seq, exp, scopes, p, null, name, parent); // [HASLab] colorful conditions
         if (parent != null)
             commands.set(commands.size() - 1, newcommand);
         else
@@ -1840,7 +1847,8 @@ public final class CompModule extends Browsable implements Module {
     }
 
     /** Add a COMMAND declaration. */
-    void addCommand(boolean followUp, Pos pos, Expr e, boolean check, int overall, int bitwidth, int seq, int expects, List<CommandScope> scopes, ExprVar label) throws Err {
+    // [HASLab] colorful conditions
+    void addCommand(boolean followUp, Pos pos, Expr e, boolean check, int overall, int bitwidth, int seq, int expects, List<CommandScope> scopes, ExprVar label, FeatureScope p) throws Err {
 
         if (followUp && !Version.experimental)
             throw new ErrorSyntax(pos, "Syntax error encountering => symbol.");
@@ -1856,7 +1864,7 @@ public final class CompModule extends Browsable implements Module {
             addFunc(e.span().merge(pos), Pos.UNKNOWN, n = "run$" + (1 + commands.size()), null, new ArrayList<Decl>(), null, e);
         String labelName = (label == null || label.label.length() == 0) ? n : label.label;
         Command parent = followUp ? commands.get(commands.size() - 1) : null;
-        Command newcommand = new Command(e.span().merge(pos), e, labelName, check, overall, bitwidth, seq, expects, scopes, null, ExprVar.make(null, n), parent);
+        Command newcommand = new Command(e.span().merge(pos), e, labelName, check, overall, bitwidth, seq, expects, scopes, p, null, ExprVar.make(null, n), parent); // [HASLab] colorful conditions
         if (parent != null)
             commands.set(commands.size() - 1, newcommand);
         else
@@ -1866,7 +1874,7 @@ public final class CompModule extends Browsable implements Module {
     public void addDefaultCommand() {
         if (commands.isEmpty()) {
             addFunc(Pos.UNKNOWN, Pos.UNKNOWN, "$$Default", null, new ArrayList<Decl>(), null, ExprConstant.TRUE);
-            commands.add(new Command(Pos.UNKNOWN, ExprConstant.TRUE, "Default", false, 4, 4, 4, 0, null, null, ExprVar.make(null, "$$Default"), null));
+            commands.add(new Command(Pos.UNKNOWN, ExprConstant.TRUE, "Default", false, 4, 4, 4, 0, null, null, null, ExprVar.make(null, "$$Default"), null)); // [HASLab] colorful conditions
         }
     }
 
@@ -1918,7 +1926,7 @@ public final class CompModule extends Browsable implements Module {
         if (cmd.nameExpr != null) {
             cmd.nameExpr.setReferenced(declaringClause);
         }
-        return new Command(cmd.pos, cmd.nameExpr, cmd.label, cmd.check, cmd.overall, cmd.bitwidth, cmd.maxseq, cmd.expects, sc.makeConst(), exactSigs, globalFacts.and(e), parent);
+        return new Command(cmd.pos, cmd.nameExpr, cmd.label, cmd.check, cmd.overall, cmd.bitwidth, cmd.maxseq, cmd.expects, sc.makeConst(), cmd.feats, exactSigs, globalFacts.and(e), parent); // [HASLab] colorful conditions
 
     }
 
@@ -1990,7 +1998,7 @@ public final class CompModule extends Browsable implements Module {
             String[] names = new String[d.names.size()];
             for (int i = 0; i < names.length; i++)
                 names[i] = d.names.get(i).label;
-            Field[] fields = s.addTrickyField(d.span(), d.isPrivate, d.disjoint, d.disjoint2, null, names, bound);
+            Field[] fields = s.addTrickyField(d.span(), d.isPrivate, d.disjoint, d.disjoint2, null, names, bound, d.color); // [HASLab] colorful conditions
             for (Field f : fields) {
                 rep.typecheck("Sig " + s + ", Field " + f.label + ": " + f.type() + "\n");
             }

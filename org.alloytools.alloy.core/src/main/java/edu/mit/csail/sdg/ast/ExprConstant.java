@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -19,13 +20,18 @@ import static edu.mit.csail.sdg.ast.Sig.UNIV;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.alloy4.ErrorWarning;
 import edu.mit.csail.sdg.alloy4.Pos;
 
-/** Immutable; represents a constant in the AST. */
+/**
+ * Immutable; represents a constant in the AST.
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-colorful
+ */
 
 public final class ExprConstant extends Expr {
 
@@ -89,7 +95,7 @@ public final class ExprConstant extends Expr {
      * @param num - the number (this argument is ignored if op!=NUMBER)
      */
     private ExprConstant(Pos pos, Op op, int num, String string) {
-        super(pos, null, false, (op == Op.IDEN ? Type.make2(UNIV) : (op == Op.NEXT ? Type.make2(Sig.SIGINT) : (op == Op.TRUE || op == Op.FALSE ? Type.FORMULA : (op == Op.EMPTYNESS ? UNIV.type : (op == Op.STRING ? Sig.STRING.type : Type.smallIntType()))))), 0, 0, null);
+        super(pos, null, false, (op == Op.IDEN ? Type.make2(UNIV) : (op == Op.NEXT ? Type.make2(Sig.SIGINT) : (op == Op.TRUE || op == Op.FALSE ? Type.FORMULA : (op == Op.EMPTYNESS ? UNIV.type : (op == Op.STRING ? Sig.STRING.type : Type.smallIntType()))))), 0, 0, null, new HashSet<Integer>()); // [HASLab] colorful conditions
         this.op = op;
         this.num = (op == Op.NUMBER ? num : 0);
         this.string = (op == Op.STRING ? string : "");

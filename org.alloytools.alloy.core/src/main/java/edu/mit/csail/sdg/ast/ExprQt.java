@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -19,8 +20,10 @@ import static edu.mit.csail.sdg.ast.Type.EMPTY;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import edu.mit.csail.sdg.alloy4.ConstList;
 import edu.mit.csail.sdg.alloy4.ConstList.TempList;
@@ -46,6 +49,8 @@ import edu.mit.csail.sdg.alloy4.Pos;
  * <br>
  * <b>Invariant:</b> type!=EMPTY => sub.mult==0 <br>
  * <b>Invariant:</b> type!=EMPTY => vars.size()>0
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-colorful
  */
 
 public final class ExprQt extends Expr {
@@ -154,8 +159,9 @@ public final class ExprQt extends Expr {
     // =============================================================================================================//
 
     /** Constructs a new quantified expression. */
-    private ExprQt(Pos pos, Pos closingBracket, Op op, Type type, ConstList<Decl> decls, Expr sub, boolean ambiguous, long weight, JoinableList<Err> errs) {
-        super(pos, closingBracket, ambiguous, type, 0, weight, errs);
+    // [HASLab] colorful conditions
+    private ExprQt(Pos pos, Pos closingBracket, Op op, Type type, ConstList<Decl> decls, Expr sub, boolean ambiguous, long weight, JoinableList<Err> errs, Set<Integer> color) {
+        super(pos, closingBracket, ambiguous, type, 0, weight, errs, color); // [HASLab] colorful conditions
         this.op = op;
         this.decls = decls;
         this.sub = sub;
@@ -201,7 +207,24 @@ public final class ExprQt extends Expr {
          *            a set or relation)
          * @param sub - the body of the expression
          */
+        // [HASLab] colorful conditions
         public final Expr make(Pos pos, Pos closingBracket, List<Decl> decls, Expr sub) {
+            return make(pos, closingBracket, decls, sub, new HashSet<Integer>()); // [HASLab] colorful conditions
+        }
+
+        /**
+         * Constructs a quantification expression with "this" as the operator.
+         *
+         * @param pos - the position of the "quantifier" in the source file (or null if
+         *            unknown)
+         * @param closingBracket - the position of the "closing bracket" in the source
+         *            file (or null if unknown)
+         * @param decls - the list of variable declarations (each variable must be over
+         *            a set or relation)
+         * @param sub - the body of the expression
+         */
+        // [HASLab] colorful conditions
+        public final Expr make(Pos pos, Pos closingBracket, List<Decl> decls, Expr sub, Set<Integer> color) {
             Type t = this == SUM ? Type.smallIntType() : (this == COMPREHENSION ? Type.EMPTY : Type.FORMULA);
             if (this != SUM)
                 sub = sub.typecheck_as_formula();
@@ -257,7 +280,7 @@ public final class ExprQt extends Expr {
                 errs = sub.errors; // if the vars have errors, then the
                                   // subexpression's errors will be too
                                   // confusing, so let's skip them
-            return new ExprQt(pos, closingBracket, this, t, ConstList.make(decls), sub, ambiguous, weight, errs);
+            return new ExprQt(pos, closingBracket, this, t, ConstList.make(decls), sub, ambiguous, weight, errs, color); // [HASLab] colorful conditions
         }
 
         /** Returns the human readable label for this operator */

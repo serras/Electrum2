@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -19,7 +20,9 @@ import static edu.mit.csail.sdg.alloy4.TableView.clean;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.alloytools.util.table.Table;
 
@@ -37,7 +40,11 @@ import edu.mit.csail.sdg.alloy4.Util;
 import edu.mit.csail.sdg.alloy4.Version;
 import edu.mit.csail.sdg.ast.Attr.AttrType;
 
-/** Mutable; represents a signature. */
+/**
+ * Mutable; represents a signature.
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-colorful
+ */
 
 public abstract class Sig extends Expr implements Clause {
 
@@ -148,6 +155,7 @@ public abstract class Sig extends Expr implements Clause {
     /**
      * Store the list of attributes.
      */
+    // [HASLab] colorful, removed final
     public final ConstList<Attr> attributes;
 
     /**
@@ -244,7 +252,7 @@ public abstract class Sig extends Expr implements Clause {
 
     /** Constructs a new builtin PrimSig. */
     private Sig(String label) {
-        super(Pos.UNKNOWN, null);
+        super(Pos.UNKNOWN, null, new HashSet<Integer>()); // [HASLab] colorful conditions
         Expr oneof = ExprUnary.Op.ONEOF.make(null, this);
         ExprVar v = ExprVar.make(null, "this", oneof.type);
         this.decl = new Decl(null, null, null, Util.asList(v), oneof);
@@ -263,8 +271,15 @@ public abstract class Sig extends Expr implements Clause {
     }
 
     /** Constructs a new PrimSig or SubsetSig. */
+    // [HASLab] colorful conditions
     private Sig(Type type, String label, Attr... attributes) throws Err {
-        super(AttrType.WHERE.find(attributes), type);
+        this(type, label, new HashSet<Integer>(), attributes);
+    }
+
+    /** Constructs a new PrimSig or SubsetSig. */
+    // [HASLab] colorful conditions
+    private Sig(Type type, String label, Set<Integer> color, Attr... attributes) throws Err {
+        super(AttrType.WHERE.find(attributes), type, color); // [HASLab] colorful conditions
         this.attributes = Util.asList(attributes);
         Expr oneof = ExprUnary.Op.ONEOF.make(null, this);
         ExprVar v = ExprVar.make(null, "this", oneof.type);
@@ -475,8 +490,25 @@ public abstract class Sig extends Expr implements Clause {
          * @throws ErrorType if you attempt to extend the builtin sigs NONE, SIGINT,
          *             SEQIDX, or STRING
          */
+        // [HASLab] colorful conditions
         public PrimSig(String label, PrimSig parent, Attr... attributes) throws Err {
-            super(((parent != null && parent.isEnum != null) ? parent.type : null), label, Util.append(attributes, Attr.SUBSIG));
+            this(label, parent, new HashSet<Integer>(), attributes);
+        }
+
+        /**
+         * Constructs a non-builtin sig.
+         *
+         * @param label - the name of this sig (it does not need to be unique)
+         * @param parent - the parent (must not be null, and must not be NONE)
+         * @param attributes - the list of optional attributes such as ABSTRACT, LONE,
+         *            ONE, SOME, SUBSIG, PRIVATE, META, or ENUM
+         * @throws ErrorSyntax if the signature has two or more multiplicities
+         * @throws ErrorType if you attempt to extend the builtin sigs NONE, SIGINT,
+         *             SEQIDX, or STRING
+         */
+        // [HASLab] colorful conditions
+        public PrimSig(String label, PrimSig parent, Set<Integer> color, Attr... attributes) throws Err {
+            super(((parent != null && parent.isEnum != null) ? parent.type : null), label, color, Util.append(attributes, Attr.SUBSIG)); // [HASLab] colorful conditions
             if (parent == SIGINT)
                 throw new ErrorSyntax(pos, "sig " + label + " cannot extend the builtin \"Int\" signature");
             if (parent == SEQIDX)
@@ -609,8 +641,26 @@ public abstract class Sig extends Expr implements Clause {
          * @throws ErrorSyntax if the signature has two or more multiplicities
          * @throws ErrorType if parents only contains NONE
          */
+        // [HASLab] colorful conditions
         public SubsetSig(String label, Collection<Sig> parents, Attr... attributes) throws Err {
-            super(getType(label, parents), label, Util.append(attributes, Attr.SUBSET));
+            this(label, parents, new HashSet<Integer>(), attributes);
+        }
+
+        /**
+         * Constructs a subset sig.
+         *
+         * @param label - the name of this sig (it does not need to be unique)
+         * @param parents - the list of parents (if this list is null or empty, we
+         *            assume the caller means UNIV)
+         * @param attributes - the list of optional attributes such as EXACT, SUBSET,
+         *            LONE, ONE, SOME, PRIVATE, or META
+         * @throws ErrorSyntax if the signature has two or more multiplicities
+         * @throws ErrorType if parents only contains NONE
+         */
+        // [HASLab] colorful conditions
+        public SubsetSig(String label, Collection<Sig> parents, Set<Integer> color, Attr... attributes) throws Err {
+            super(getType(label, parents), label, color, Util.append(attributes, Attr.SUBSET)); // [HASLab] colorful conditions
+
             if (isEnum != null)
                 throw new ErrorType(pos, "Subset signature cannot be an enum.");
             boolean exact = false;
@@ -666,7 +716,8 @@ public abstract class Sig extends Expr implements Clause {
     public static final class Field extends ExprHasName implements Clause {
 
         /** The sig that this field belongs to; never null. */
-        public final Sig     sig;
+        // [HASLab] colorful, removed final
+        public Sig           sig;
 
         /** Nonnull if the user wanted this field to be private. */
         public final Pos     isPrivate;
@@ -686,8 +737,9 @@ public abstract class Sig extends Expr implements Clause {
         }
 
         /** Constructs a new Field object. */
-        private Field(Pos pos, Pos isPrivate, Pos isMeta, Pos disjoint, Pos disjoint2, Sig sig, String label, Expr bound) throws Err {
-            super(pos, label, sig.type.product(bound.type));
+        // [HASLab] colorful conditions
+        private Field(Pos pos, Pos isPrivate, Pos isMeta, Pos disjoint, Pos disjoint2, Sig sig, String label, Expr bound, Set<Integer> color) throws Err {
+            super(pos, label, sig.type.product(bound.type), color); // [HASLab] colorful conditions
             this.defined = bound.mult() == ExprUnary.Op.EXACTLYOF;
             if (sig.builtin)
                 throw new ErrorSyntax(pos, "Builtin sig \"" + sig + "\" cannot have fields.");
@@ -823,8 +875,8 @@ public abstract class Sig extends Expr implements Clause {
                                                          // multiplicity
                                                          // symbol, we assume
                                                          // it's oneOf
-        final Field f = new Field(null, null, null, null, null, this, label, bound);
-        final Decl d = new Decl(null, null, null, Arrays.asList(f), bound);
+        final Field f = new Field(null, null, null, null, null, this, label, bound, new HashSet<Integer>()); // [HASLab] colorful conditions
+        final Decl d = new Decl(null, null, null, Arrays.asList(f), bound, new HashSet<Integer>()); // [HASLab] colorful conditions
         f.decl = d;
         fields.add(d);
         realFields.add(f);
@@ -852,7 +904,8 @@ public abstract class Sig extends Expr implements Clause {
      * @throws ErrorType if the bound is not fully typechecked or is not a
      *             set/relation
      */
-    public final Field[] addTrickyField(Pos pos, Pos isPrivate, Pos isDisjoint, Pos isDisjoint2, Pos isMeta, String[] labels, Expr bound) throws Err {
+    // [HASLab] colorful conditions
+    public final Field[] addTrickyField(Pos pos, Pos isPrivate, Pos isDisjoint, Pos isDisjoint2, Pos isMeta, String[] labels, Expr bound, Set<Integer> color) throws Err {
         bound = bound.typecheck_as_set();
         if (bound.ambiguous)
             bound = bound.resolve_as_set(null);
@@ -863,8 +916,8 @@ public abstract class Sig extends Expr implements Clause {
                                                          // it's oneOf
         final Field[] f = new Field[labels.length];
         for (int i = 0; i < f.length; i++)
-            f[i] = new Field(pos, isPrivate, isMeta, isDisjoint, isDisjoint2, this, labels[i], bound);
-        final Decl d = new Decl(isPrivate, isDisjoint, isDisjoint2, Arrays.asList(f), bound);
+            f[i] = new Field(pos, isPrivate, isMeta, isDisjoint, isDisjoint2, this, labels[i], bound, color); // [HASLab] colorful conditions
+        final Decl d = new Decl(isPrivate, isDisjoint, isDisjoint2, Arrays.asList(f), bound, color); // [HASLab] colorful conditions
         for (int i = 0; i < f.length; i++) {
             f[i].decl = d;
             realFields.add(f[i]);
@@ -902,8 +955,8 @@ public abstract class Sig extends Expr implements Clause {
             bound = bound.resolve_as_set(null);
         if (bound.mult() != ExprUnary.Op.EXACTLYOF)
             bound = ExprUnary.Op.EXACTLYOF.make(null, bound);
-        final Field f = new Field(pos, isPrivate, isMeta, null, null, this, label, bound);
-        final Decl d = new Decl(null, null, null, Arrays.asList(f), bound);
+        final Field f = new Field(pos, isPrivate, isMeta, null, null, this, label, bound, new HashSet<Integer>()); // [HASLab] colorful conditions
+        final Decl d = new Decl(null, null, null, Arrays.asList(f), bound, new HashSet<Integer>()); // [HASLab] colorful conditions
         f.decl = d;
         fields.add(d);
         realFields.add(f);

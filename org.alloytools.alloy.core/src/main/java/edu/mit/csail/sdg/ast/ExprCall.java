@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -18,7 +19,9 @@ package edu.mit.csail.sdg.ast;
 import static edu.mit.csail.sdg.ast.Type.EMPTY;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.mit.csail.sdg.alloy4.ConstList;
 import edu.mit.csail.sdg.alloy4.ConstList.TempList;
@@ -36,6 +39,8 @@ import edu.mit.csail.sdg.ast.Sig.Field;
  * Immutable; represents a call.
  * <p>
  * <b>Invariant:</b> type!=EMPTY => (all x:args | x.mult==0)
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-colorful
  */
 
 public final class ExprCall extends Expr {
@@ -275,8 +280,9 @@ public final class ExprCall extends Expr {
      * Constructs an ExprCall node with the given function "pred/fun" and the list
      * of arguments "args".
      */
-    private ExprCall(Pos pos, Pos closingBracket, boolean ambiguous, Type type, Func fun, ConstList<Expr> args, long extraWeight, long weight, JoinableList<Err> errs) {
-        super(pos, closingBracket, ambiguous, type, 0, weight, errs);
+    // [HASLab] colorful conditions
+    private ExprCall(Pos pos, Pos closingBracket, boolean ambiguous, Type type, Func fun, ConstList<Expr> args, long extraWeight, long weight, JoinableList<Err> errs, Set<Integer> color) {
+        super(pos, closingBracket, ambiguous, type, 0, weight, errs, color); // [HASLab] colorful conditions
         this.fun = fun;
         this.args = args;
         this.extraWeight = extraWeight;
@@ -311,7 +317,17 @@ public final class ExprCall extends Expr {
      * Constructs an ExprCall node with the given predicate/function "fun" and the
      * list of arguments "args".
      */
+    // [HASLab] colorful Alloy
     public static Expr make(Pos pos, Pos closingBracket, Func fun, List<Expr> args, long extraPenalty) {
+        return make(pos, closingBracket, fun, args, extraPenalty, new HashSet<Integer>());
+    }
+
+    /**
+     * Constructs an ExprCall node with the given predicate/function "fun" and the
+     * list of arguments "args".
+     */
+    // [HASLab] colorful conditions
+    public static Expr make(Pos pos, Pos closingBracket, Func fun, List<Expr> args, long extraPenalty, Set<Integer> color) {
         if (extraPenalty < 0)
             extraPenalty = 0;
         if (args == null)
@@ -354,7 +370,7 @@ public final class ExprCall extends Expr {
                 t = tt; // Just in case an error occurred...
             }
         }
-        return new ExprCall(pos, closingBracket, ambiguous, t, fun, newargs.makeConst(), extraPenalty, weight, errs);
+        return new ExprCall(pos, closingBracket, ambiguous, t, fun, newargs.makeConst(), extraPenalty, weight, errs, color); // [HASLab] colorful conditions
     }
 
     // ============================================================================================================//

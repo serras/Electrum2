@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -15,16 +16,54 @@
 
 package edu.mit.csail.sdg.ast;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.mit.csail.sdg.alloy4.ConstList;
+import edu.mit.csail.sdg.alloy4.ErrorColor;
+import edu.mit.csail.sdg.alloy4.ErrorSyntax;
 import edu.mit.csail.sdg.alloy4.Pos;
 
 /**
  * Immutable; this declaration binds a list of names to an expression.
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-colorful
  */
 
 public final class Decl {
+
+    /**
+     * The presence/absence conditions for this browsable element.
+     */
+    // [HASLab]
+    public Set<Integer> color = new HashSet<Integer>();
+
+    /**
+     * Paints this browsable element with a (positive or negative) presence
+     * condition.
+     *
+     * @param c
+     */
+    // [HASLab]
+    public void paint(int c) throws ErrorColor {
+        if (color.contains(-c))
+            throw new ErrorSyntax(Pos.UNKNOWN, "Negative and positive of same feature: " + this);
+        color.add(c);
+    }
+
+    /**
+     * Paints this browsable element with a set of (positive or negative) presence
+     * condition.
+     *
+     * @param c
+     */
+    // [HASLab]
+    public void paint(Collection<Integer> c) {
+        // TODO: type check
+        color.addAll(c);
+    }
 
     /**
      * If nonnull, then this decl is private (and this.isPrivate is the location of
@@ -71,7 +110,16 @@ public final class Decl {
     /**
      * This constructs a declaration; the list of names must not be empty.
      */
+    // [HASLab] colorful conditions
     public Decl(Pos isPrivate, Pos disjoint, Pos disjoint2, List< ? extends ExprHasName> names, Expr expr) {
+        this(isPrivate, disjoint, disjoint2, names, expr, new HashSet<Integer>()); // [HASLab] colorful conditions
+    }
+
+    /**
+     * This constructs a declaration; the list of names must not be empty.
+     */
+    // [HASLab] colorful conditions
+    public Decl(Pos isPrivate, Pos disjoint, Pos disjoint2, List< ? extends ExprHasName> names, Expr expr, Set<Integer> color) {
         if (names.size() == 0)
             throw new NullPointerException();
         this.isPrivate = isPrivate;
@@ -79,6 +127,7 @@ public final class Decl {
         this.disjoint2 = disjoint2;
         this.names = ConstList.make(names);
         this.expr = expr;
+        this.color = color; // [HASLab] colorful conditions
     }
 
     /** Return the first variable in this declaration. */

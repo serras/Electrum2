@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -19,6 +20,7 @@ import static edu.mit.csail.sdg.ast.Type.EMPTY;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import edu.mit.csail.sdg.alloy4.Err;
@@ -30,6 +32,8 @@ import edu.mit.csail.sdg.alloy4.Pos;
  * Immutable; represents an illegal node.
  * <p>
  * <b>Invariant:</b> this.type==EMPTY && this.errors.size()==1
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-colorful
  */
 
 public final class ExprBad extends Expr {
@@ -58,7 +62,7 @@ public final class ExprBad extends Expr {
 
     /** Constructs an ExprBad object. */
     public ExprBad(Pos pos, String originalText, Err error) {
-        super(pos, null, false, EMPTY, 0, 0, new JoinableList<Err>(error));
+        super(pos, null, false, EMPTY, 0, 0, new JoinableList<Err>(error), new HashSet<Integer>()); // [HASLab] colorful conditions
         this.originalText = originalText;
     }
 

@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -39,6 +40,8 @@ import edu.mit.csail.sdg.alloy4.Util;
  * <b>Invariant:</b> maxseq >= -1
  * <p>
  * <b>Invariant:</b> maxstring >= -1
+ *
+ * @modified Nuno Macedo, Chong Liu // [HASLab] electrum-colorful
  */
 
 public final class Command extends Browsable {
@@ -95,6 +98,11 @@ public final class Command extends Browsable {
     /** The list of scopes. */
     public final ConstList<CommandScope> scope;
 
+
+    /** The feature scopes. */
+    // [HASLab] colorful scopes
+    public final FeatureScope            feats;
+
     /**
      * This stores a list of Sig whose scope shall be considered "exact", but we may
      * or may not know what its scope is yet.
@@ -116,6 +124,9 @@ public final class Command extends Browsable {
         }
         boolean first = true;
         StringBuilder sb = new StringBuilder(check ? "Check " : "Run ").append(label);
+
+        sb.append(" with " + feats); // [HASLab] colorful scopes
+
         if (overall >= 0 && (bitwidth >= 0 || maxseq >= 0 || scope.size() > 0))
             sb.append(" for ").append(overall).append(" but");
         else if (overall >= 0)
@@ -152,7 +163,7 @@ public final class Command extends Browsable {
      * @param formula - the formula that must be satisfied by this command
      */
     public Command(boolean check, int overall, int bitwidth, int maxseq, Expr formula) throws ErrorSyntax {
-        this(null, null, "", check, overall, bitwidth, maxseq, -1, null, null, formula, null);
+        this(null, null, "", check, overall, bitwidth, maxseq, -1, null, null, null, formula, null); // [HASLab] colorful scopes
     }
 
     /**
@@ -175,7 +186,8 @@ public final class Command extends Browsable {
      *            exact though we may or may not know what the scope is yet
      * @param formula - the formula that must be satisfied by this command
      */
-    public Command(Pos pos, Expr e, String label, boolean check, int overall, int bitwidth, int maxseq, int expects, Iterable<CommandScope> scope, Iterable<Sig> additionalExactSig, Expr formula, Command parent) {
+    // [HASLab] colorful scopes
+    public Command(Pos pos, Expr e, String label, boolean check, int overall, int bitwidth, int maxseq, int expects, Iterable<CommandScope> scope, FeatureScope feats, Iterable<Sig> additionalExactSig, Expr formula, Command parent) {
         if (pos == null)
             pos = Pos.UNKNOWN;
         this.nameExpr = e;
@@ -189,6 +201,7 @@ public final class Command extends Browsable {
         this.maxstring = (-1);
         this.expects = (expects < 0 ? -1 : (expects > 0 ? 1 : 0));
         this.scope = ConstList.make(scope);
+        this.feats = feats; // [HASLab] colorful scopes
         this.additionalExactScopes = ConstList.make(additionalExactSig);
         this.parent = parent;
     }
@@ -198,7 +211,7 @@ public final class Command extends Browsable {
      * except with a different formula.
      */
     public Command change(Expr newFormula) {
-        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, expects, scope, additionalExactScopes, newFormula, parent);
+        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, expects, scope, feats, additionalExactScopes, newFormula, parent); // [HASLab] colorful scopes
     }
 
     /**
@@ -206,7 +219,7 @@ public final class Command extends Browsable {
      * except with a different scope.
      */
     public Command change(ConstList<CommandScope> scope) {
-        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, expects, scope, additionalExactScopes, formula, parent);
+        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, expects, scope, feats, additionalExactScopes, formula, parent); // [HASLab] colorful scopes
     }
 
     /**
@@ -214,7 +227,7 @@ public final class Command extends Browsable {
      * except with a different list of "additional exact sigs".
      */
     public Command change(Sig... additionalExactScopes) {
-        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, expects, scope, Util.asList(additionalExactScopes), formula, parent);
+        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, expects, scope, feats, Util.asList(additionalExactScopes), formula, parent); // [HASLab] colorful scopes
     }
 
     /**

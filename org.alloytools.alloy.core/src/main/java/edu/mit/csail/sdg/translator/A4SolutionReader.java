@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -23,6 +24,7 @@ import static edu.mit.csail.sdg.ast.Sig.UNIV;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -51,6 +53,8 @@ import kodkod.instance.TupleSet;
 /**
  * This helper class contains helper routines for reading an A4Solution object
  * from an XML file.
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-colorful
  */
 
 public final class A4SolutionReader {
@@ -297,7 +301,7 @@ public final class A4SolutionReader {
         if (field == null)
             field = parent.addTrickyField(Pos.UNKNOWN, isPrivate, null, null, isMeta, new String[] {
                                                                                                     label
-            }, UNIV.join(type))[0];
+            }, UNIV.join(type), new HashSet<Integer>())[0]; // [HASLab] colorful conditions
         TupleSet ts = parseTuples(node, arity);
         expr2ts.put(field, ts);
         return field;

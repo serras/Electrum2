@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -18,6 +19,7 @@ package edu.mit.csail.sdg.ast;
 import static edu.mit.csail.sdg.ast.Type.EMPTY;
 
 import java.util.Collection;
+import java.util.Set;
 
 import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.alloy4.ErrorWarning;
@@ -28,6 +30,8 @@ import edu.mit.csail.sdg.alloy4.Pos;
  * Immutable; represents a custom node.
  * <p>
  * <b>Invariant:</b> this.type==EMPTY && this.errors.size()==1
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-colorful
  */
 
 public abstract class ExprCustom extends Expr {
@@ -44,8 +48,9 @@ public abstract class ExprCustom extends Expr {
      * @param pos - the Pos for this expression (can be Pos.UNKNOWN if unknown)
      * @param error - the error to display if this node does not get desugared
      */
-    public ExprCustom(Pos pos, Err error) {
-        super(pos, null, false, EMPTY, 0, 0, new JoinableList<Err>(error));
+    // [HASLab] colorful conditions
+    public ExprCustom(Pos pos, Err error, Set<Integer> color) {
+        super(pos, null, false, EMPTY, 0, 0, new JoinableList<Err>(error), color); // [HASLab] colorful conditions
         if (error == null)
             throw new NullPointerException();
     }

@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -19,6 +20,7 @@ import static edu.mit.csail.sdg.ast.Type.EMPTY;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import edu.mit.csail.sdg.alloy4.ConstList;
@@ -32,6 +34,8 @@ import edu.mit.csail.sdg.alloy4.Pos;
  * Immutable; represents an illegal pred/fun call.
  * <p>
  * <b>Invariant:</b> this.type==EMPTY && this.errors.size()>0
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-colorful
  */
 
 public final class ExprBadCall extends Expr {
@@ -88,7 +92,7 @@ public final class ExprBadCall extends Expr {
 
     /** Constructs an ExprBadCall object. */
     private ExprBadCall(Pos pos, Pos closingBracket, boolean ambiguous, Func fun, ConstList<Expr> args, JoinableList<Err> errors, long extraWeight, long weight) {
-        super(pos, closingBracket, ambiguous, EMPTY, 0, weight, errors);
+        super(pos, closingBracket, ambiguous, EMPTY, 0, weight, errors, new HashSet<Integer>()); // [HASLab] colorful conditions
         this.fun = fun;
         this.args = args;
         this.extraWeight = extraWeight;

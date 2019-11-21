@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -18,8 +19,10 @@ package edu.mit.csail.sdg.ast;
 import static edu.mit.csail.sdg.alloy4.TableView.clean;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.alloytools.util.table.Table;
 
@@ -41,6 +44,8 @@ import edu.mit.csail.sdg.alloy4.Util;
  * <p>
  * <b>Invariant:</b> the return type declaration does not contain a
  * predicate/function call
+ *
+ * @modified Nuno Macedo, Chong Liu // [HASLab] electrum-colorful
  */
 
 public final class Func extends Browsable implements Clause {
@@ -137,7 +142,7 @@ public final class Func extends Browsable implements Clause {
      *             predicate/function call
      */
     public Func(Pos pos, String label, List<Decl> decls, Expr returnDecl, Expr body) throws Err {
-        this(pos, null, label, decls, returnDecl, body);
+        this(pos, null, label, decls, returnDecl, body, new HashSet<Integer>()); // [HASLab] colorful conditions
     }
 
     /**
@@ -170,13 +175,50 @@ public final class Func extends Browsable implements Clause {
      * @throws ErrorSyntax if this function's return type declaration contains a
      *             predicate/function call
      */
+    // [HASLab] colorful conditions
     public Func(Pos pos, Pos isPrivate, String label, List<Decl> decls, Expr returnDecl, Expr body) throws Err {
+        this(pos, isPrivate, label, decls, returnDecl, body, new HashSet<Integer>()); // [HASLab] colorful conditions
+    }
+
+    /**
+     * Constructs a new predicate/function.
+     * <p>
+     * The first declaration's bound should be an expression with no free variables.
+     * <br>
+     * The second declaration's bound should be an expression with no free
+     * variables, except possibly the parameters in first declaration. <br>
+     * The third declaration's bound should be an expression with no free variables,
+     * except possibly the parameters in first two declarations. <br>
+     * etc. <br>
+     * The return declaration should have no free variables, except possibly the
+     * list of input parameters.
+     *
+     * @param pos - the original position in the file
+     * @param isPrivate - if nonnull, then the user intended this func/pred to be
+     *            "private"
+     * @param label - the label for this predicate/function (does not have to be
+     *            unique)
+     * @param decls - the list of parameter declarations (can be null or an empty
+     *            list if this predicate/function has no parameters)
+     * @param returnDecl - the return declaration (null if this is a predicate
+     *            rather than a function)
+     * @throws ErrorType if returnType!=null and returnType cannot be unambiguously
+     *             typechecked to be a set/relation
+     * @throws ErrorSyntax if the list of parameters contain duplicates
+     * @throws ErrorSyntax if at least one of the parameter declaration contains a
+     *             predicate/function call
+     * @throws ErrorSyntax if this function's return type declaration contains a
+     *             predicate/function call
+     */
+    // [HASLab] colorful conditions
+    public Func(Pos pos, Pos isPrivate, String label, List<Decl> decls, Expr returnDecl, Expr body, Set<Integer> color) throws Err {
         if (pos == null)
             pos = Pos.UNKNOWN;
         this.pos = pos;
         this.isPrivate = isPrivate;
         this.label = (label == null ? "" : label);
         this.isPred = (returnDecl == null);
+        this.color = color; // [HASLab] colorful conditions
         if (returnDecl == null)
             returnDecl = ExprConstant.FALSE;
         if (returnDecl.mult == 0 && returnDecl.type.arity() == 1)

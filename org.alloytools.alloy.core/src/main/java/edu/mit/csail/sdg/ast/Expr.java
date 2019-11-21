@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -23,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.alloy4.ErrorType;
@@ -40,6 +42,8 @@ import edu.mit.csail.sdg.ast.Sig.PrimSig;
  * <b>Invariant:</b> type==EMPTY iff errors.size()>0 <br>
  * <b>Invariant:</b> mult==0 || mult==1 || mult==2 <br>
  * <b>Invariant:</b> weight>0
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-colorful
  */
 
 public abstract class Expr extends Browsable {
@@ -119,7 +123,8 @@ public abstract class Expr extends Browsable {
      * @param errors - the list of errors associated with this Expr node (can be
      *            null if there are none)
      */
-    Expr(Pos pos, Pos closingBracket, boolean ambiguous, Type type, int mult, long weight, JoinableList<Err> errors) {
+    // [HASLab] colorful conditions
+    Expr(Pos pos, Pos closingBracket, boolean ambiguous, Type type, int mult, long weight, JoinableList<Err> errors, Set<Integer> color) {
         this.pos = (pos == null ? Pos.UNKNOWN : pos);
         this.closingBracket = (closingBracket == null ? Pos.UNKNOWN : closingBracket);
         this.ambiguous = ambiguous;
@@ -131,10 +136,12 @@ public abstract class Expr extends Browsable {
         this.type = (errors.size() > 0 || type == null) ? EMPTY : type;
         this.weight = (weight > 0) ? weight : 0;
         this.errors = errors;
+        this.color = color;
     }
 
     /** This must only be called by Sig's constructor. */
-    Expr(Pos pos, Type type) {
+    // [HASLab] colorful conditions
+    Expr(Pos pos, Type type, Set<Integer> color) {
         this.closingBracket = Pos.UNKNOWN;
         this.ambiguous = false;
         this.errors = emptyListOfErrors;
@@ -142,6 +149,7 @@ public abstract class Expr extends Browsable {
         this.type = (type == null || type == EMPTY) ? Type.make((PrimSig) this) : type;
         this.mult = 0;
         this.weight = 0;
+        this.color = color;
     }
 
     /** {@inheritDoc} */
