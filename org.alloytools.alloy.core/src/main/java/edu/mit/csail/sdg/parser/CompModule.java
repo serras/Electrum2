@@ -1908,8 +1908,9 @@ public final class CompModule extends Browsable implements Module {
             if (m.size() < 1)
                 throw new ErrorSyntax(cmd.pos, "The assertion \"" + cname + "\" cannot be found.");
 
-            Expr expr = (Expr) (m.get(0));
-            e = expr.not();
+            ExprUnary expr = (ExprUnary) ((ExprUnary) (m.get(0))).sub; // [HASLab]
+            e = expr.sub.not(); // [HASLab]
+            e.paint(expr.color); // [HASLab]
         } else {
             List<Object> m = getRawQS(4, cname); // We prefer fun/pred in the
                                                 // topmost module
