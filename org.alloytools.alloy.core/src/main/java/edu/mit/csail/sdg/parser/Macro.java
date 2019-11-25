@@ -37,10 +37,10 @@ import edu.mit.csail.sdg.parser.CompModule.Context;
 /**
  * Immutable; this class represents a macro.
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-base, electrum-colorful
  */
-
-final class Macro extends ExprCustom {
+// [HASLab] visibility
+public final class Macro extends ExprCustom {
 
     /** If nonnull, this is a private macro. */
     final Pos                        isPrivate;

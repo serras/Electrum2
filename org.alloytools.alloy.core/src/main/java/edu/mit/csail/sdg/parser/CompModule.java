@@ -478,7 +478,7 @@ public final class CompModule extends Browsable implements Module {
             // otherwise, process as regular join or as method call
             left = left.typecheck_as_set();
             if (!left.errors.isEmpty() || !(right instanceof ExprChoice))
-                return ExprBinary.Op.JOIN.make(x.pos, x.closingBracket, left, right);
+                return ExprBinary.Op.JOIN.make(x.pos, x.closingBracket, left, right, x.color); // [HASLab] colorful conditions
             return process(x.pos, x.closingBracket, right.pos, ((ExprChoice) right).choices, ((ExprChoice) right).reasons, left);
         }
 
@@ -637,7 +637,7 @@ public final class CompModule extends Browsable implements Module {
         /** {@inheritDoc} */
         @Override
         public Expr visit(ExprUnary x) throws Err {
-            return x.op.make(x.pos, visitThis(x.sub));
+            return x.op.make(x.pos, visitThis(x.sub), x.color); // [HASLab] colorful conditions
         }
 
         /** {@inheritDoc} */
@@ -1546,7 +1546,8 @@ public final class CompModule extends Browsable implements Module {
     // ============================================================================================================================//
 
     /** Add a MACRO declaration. */
-    void addMacro(Pos p, Pos isPrivate, String n, List<ExprVar> decls, Expr v) throws Err {
+    // [HASLab] colorful, return element
+    Macro addMacro(Pos p, Pos isPrivate, String n, List<ExprVar> decls, Expr v) throws Err {
         if (!Version.experimental)
             throw new ErrorSyntax(p, "LET declaration is allowed only inside a toplevel paragraph.");
         ConstList<ExprVar> ds = ConstList.make(decls);
@@ -1562,6 +1563,7 @@ public final class CompModule extends Browsable implements Module {
             macros.put(n, old);
             throw new ErrorSyntax(p, "You cannot declare more than one macro with the same name \"" + n + "\" in the same file.");
         }
+        return ans; // [HASLab] colorful, return element
     }
 
     /** Add a FUN or PRED declaration. */
@@ -1638,7 +1640,7 @@ public final class CompModule extends Browsable implements Module {
                 if (err)
                     continue;
                 try {
-                    f = new Func(f.pos, f.isPrivate, fullname, tmpdecls.makeConst(), ret, f.getBody());
+                    f = new Func(f.pos, f.isPrivate, fullname, tmpdecls.makeConst(), ret, f.getBody(), f.color); // [HASLab] colorful conditions
                     list.set(listi, f);
                     rep.typecheck("" + f + ", RETURN: " + f.returnDecl.type() + "\n");
                 } catch (Err ex) {
@@ -1696,6 +1698,18 @@ public final class CompModule extends Browsable implements Module {
         SafeList<Func> ans = new SafeList<Func>();
         for (ArrayList<Func> e : funcs.values())
             ans.addAll(e);
+        return ans.dup();
+    }
+
+    /**
+     * Return an unmodifiable list of all macros in this module.
+     */
+    // [HASLab]
+    @Override
+    public SafeList<Macro> getAllMacro() {
+        SafeList<Macro> ans = new SafeList<Macro>();
+        for (Macro m : macros.values())
+            ans.add(m);
         return ans.dup();
     }
 

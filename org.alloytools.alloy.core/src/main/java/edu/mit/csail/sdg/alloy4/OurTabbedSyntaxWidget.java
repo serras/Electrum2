@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -42,6 +43,8 @@ import edu.mit.csail.sdg.alloy4.Listener.Event;
  * <b>Thread Safety:</b> Can be called only by the AWT event thread.
  * <p>
  * <b>Invariant</b>: each tab has distinct file name.
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-colorful
  */
 
 public final class OurTabbedSyntaxWidget {
@@ -471,7 +474,7 @@ public final class OurTabbedSyntaxWidget {
                 text = get();
                 c = text.getLineStartOffset(p.y - 1) + p.x - 1;
                 d = text.getLineStartOffset(p.y2 - 1) + p.x2 - 1;
-                text.shade(color, c, d + 1);
+                text.shade(color, false, c, d + 1); // [HASLab] colorful annotations
             }
         if (text != null) {
             text.moveCaret(0, 0);

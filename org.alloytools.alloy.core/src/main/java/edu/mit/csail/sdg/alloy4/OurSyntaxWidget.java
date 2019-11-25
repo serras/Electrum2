@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -17,6 +18,8 @@ package edu.mit.csail.sdg.alloy4;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -44,6 +47,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.BoxView;
 import javax.swing.text.Document;
 import javax.swing.text.Element;
+import javax.swing.text.LabelView;
 import javax.swing.text.StyledEditorKit;
 import javax.swing.text.View;
 import javax.swing.text.ViewFactory;
@@ -60,6 +64,8 @@ import edu.mit.csail.sdg.parser.CompUtil;
  * Graphical syntax-highlighting editor.
  * <p>
  * <b>Thread Safety:</b> Can be called only by the AWT event thread
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-colorful
  */
 
 public final class OurSyntaxWidget {
@@ -68,10 +74,10 @@ public final class OurSyntaxWidget {
      * The current list of listeners; possible events are { STATUS_CHANGE, FOCUSED,
      * CTRL_PAGE_UP, CTRL_PAGE_DOWN, CARET_MOVED }.
      */
-    public final Listeners                  listeners = new Listeners();
+    public final Listeners                  listeners        = new Listeners();
 
     /** The JScrollPane containing everything. */
-    private final JScrollPane               component = OurUtil.make(new JScrollPane(), new EmptyBorder(0, 0, 0, 0));
+    private final JScrollPane               component        = OurUtil.make(new JScrollPane(), new EmptyBorder(0, 0, 0, 0));
 
     /** This is an optional JComponent annotation. */
     public final JComponent                 obj1;
@@ -83,19 +89,20 @@ public final class OurSyntaxWidget {
      * The underlying StyledDocument being displayed (changes will trigger the
      * STATUS_CHANGE event)
      */
-    private final OurSyntaxUndoableDocument doc       = new OurSyntaxUndoableDocument("Monospaced", 14);
+    private final OurSyntaxUndoableDocument doc              = new OurSyntaxUndoableDocument("Monospaced", 14);
 
     /** The underlying JTextPane being displayed. */
-    private final JTextPane                 pane      = OurAntiAlias.pane(this::getTooltip, Color.BLACK, Color.WHITE, new EmptyBorder(6, 6, 6, 6));
+    private final JTextPane                 pane             = OurAntiAlias.pane(this::getTooltip, Color.BLACK, Color.WHITE, new EmptyBorder(6, 6, 6, 6));
 
     /**
      * The filename for this JTextPane (changes will trigger the STATUS_CHANGE
      * event)
      */
-    private String                          filename  = "";
+    private String                          filename         = "";
 
     /**
-     * the file modification date for the file loaded. If no file is loaded (!isFile), this must be -1.
+     * the file modification date for the file loaded. If no file is loaded
+     * (!isFile), this must be -1.
      */
     private long                            fileModifiedDate = -1;
 
@@ -172,6 +179,8 @@ public final class OurSyntaxWidget {
 
                     @Override
                     public View create(Element x) {
+                        if (AbstractDocument.ContentElementName.equals(x.getName())) // [HASLab] colorful strike out
+                            return new StrekableLabellView(x);
                         if (!AbstractDocument.SectionElementName.equals(x.getName()))
                             return defaultFactory.create(x);
                         return new BoxView(x, View.Y_AXIS) { // 30000 is a good
@@ -202,6 +211,52 @@ public final class OurSyntaxWidget {
             pane.setCaretPosition(0);
         }
         doc.do_clearUndo();
+        // [HASLab] colorful Alloy, add the color features actions
+        for (int i = 0; i < 9; i++) {
+            final int k = i;
+            pane.getActionMap().put("alloy_c" + (i + 1), new AbstractAction("alloy_c" + (i + 1)) {
+
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        pane.getDocument().insertString(pane.getSelectionStart(), "" + ((char) (OurSyntaxDocument.O1 + k)), null);
+                        if (pane.getSelectionStart() != pane.getSelectionEnd())
+                            pane.getDocument().insertString(pane.getSelectionEnd(), "" + ((char) (OurSyntaxDocument.O1 + k)), null);
+                        pane.setSelectionEnd(pane.getSelectionEnd() - 1);
+                    } catch (BadLocationException e1) {
+                        // TODO Auto-generated catch block
+                        e1.printStackTrace();
+                    }
+                }
+            });
+            pane.getActionMap().put("alloy_s" + (i + 1), new AbstractAction("alloy_s" + (i + 1)) {
+
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        pane.getDocument().insertString(pane.getSelectionStart(), "" + ((char) (OurSyntaxDocument.E1 + k)), null);
+                        if (pane.getSelectionStart() != pane.getSelectionEnd())
+                            pane.getDocument().insertString(pane.getSelectionEnd(), "" + ((char) (OurSyntaxDocument.E1 + k)), null);
+                        pane.setSelectionEnd(pane.getSelectionEnd() - 1);
+                    } catch (BadLocationException e1) {
+                        // TODO Auto-generated catch block
+                        e1.printStackTrace();
+                    }
+                }
+            });
+        }
+        pane.getActionMap().put("alloy_c0", new AbstractAction("alloy_c0") {
+
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    pane.getDocument().insertString(pane.getSelectionStart(), "" + ("\uD83C\uDD0B"), null);
+                    if (pane.getSelectionStart() != pane.getSelectionEnd())
+                        pane.getDocument().insertString(pane.getSelectionEnd(), "" + ("\uD83C\uDD0B"), null);
+                    pane.setSelectionEnd(pane.getSelectionEnd() - 1);
+                } catch (BadLocationException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
+        });
         pane.getActionMap().put("alloy_copy", new AbstractAction("alloy_copy") {
 
             @Override
@@ -274,6 +329,12 @@ public final class OurSyntaxWidget {
         pane.getInputMap().put(KeyStroke.getKeyStroke('/', OurConsole.menuShortcutKeyMask), "alloy-comment-block");
         pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0), "alloy_tab_insert");
         pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, InputEvent.SHIFT_DOWN_MASK), "alloy_tab_remove");
+        // [HASLab] colorful Alloy, keyboard shortcuts
+        for (int i = 0; i < 9; i++) {
+            pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_1 + i, InputEvent.CTRL_MASK), "alloy_c" + (i + 1));
+            pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_1 + i, InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK), "alloy_s" + (i + 1));
+        }
+        pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_0, InputEvent.CTRL_MASK), "alloy_c0");
         pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_MASK), "alloy_copy");
         pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_MASK), "alloy_cut");
         pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_MASK), "alloy_paste");
@@ -530,10 +591,11 @@ public final class OurSyntaxWidget {
     /**
      * Shade the range of text from start (inclusive) to end (exclusive).
      */
-    void shade(Color color, int start, int end) {
+    // [HASLab] colorful Alloy, whether to strike out
+    void shade(Color color, boolean strike, int start, int end) {
         int c = color.getRGB() & 0xFFFFFF;
         if (painter == null || (painter.color.getRGB() & 0xFFFFFF) != c)
-            painter = new OurHighlighter(color);
+            painter = new OurHighlighter(color, strike); // [HASLab] colorful Alloy, whether to strike out
         try {
             pane.getHighlighter().addHighlight(start, end, painter);
         } catch (Throwable ex) {} // exception is okay
@@ -771,7 +833,7 @@ public final class OurSyntaxWidget {
         fileModifiedDate = Util.getModifiedDate(this.filename);
         if (fileModifiedDate == 0)
             fileModifiedDate = new Date().getTime();
-        
+
         modified = false;
         isFile = true;
         listeners.fire(this, Event.STATUS_CHANGE);
@@ -797,12 +859,11 @@ public final class OurSyntaxWidget {
         }
 
         if (isFile && n.equals(this.filename) && Util.getModifiedDate(this.filename) > fileModifiedDate) {
-            if (!OurDialog.yesno("The file has been modified outside the editor.\n" +
-                                 "Do you want to overwrite it anyway?")) {
+            if (!OurDialog.yesno("The file has been modified outside the editor.\n" + "Do you want to overwrite it anyway?")) {
                 return false;
             }
         }
-        
+
         if (saveAs(n, bannedNames)) {
             Util.setCurrentDirectory(new File(filename).getParentFile());
             return true;
@@ -861,4 +922,54 @@ public final class OurSyntaxWidget {
         }
         return null;
     }
+
+
+    /** Retrieve the Pos of the selected text in the editor. */
+    // [HASLab] colorful Alloy
+    public Pos getPosSelected() {
+        int y1 = 1 + getLineOfOffset(pane.getSelectionStart());
+        int y2 = 1 + getLineOfOffset(pane.getSelectionEnd());
+        int x1 = 1 + pane.getSelectionStart() - getLineStartOffset(y1 - 1);
+        int x2 = pane.getSelectionEnd() - getLineStartOffset(y2 - 1);
+        return new Pos(getFilename(), x1, y1, x2, y2);
+    }
+
+    /** A label view with the ability to strike out text with colors. */
+    // [HASLab] colorful Alloy
+    class StrekableLabellView extends LabelView {
+
+        public StrekableLabellView(Element elem) {
+            super(elem);
+        }
+
+        @Override
+        public void paint(Graphics g, Shape allocation) {
+            super.removeAll();
+            super.paint(g, allocation);
+            paintStrikeLine(g, allocation);
+        }
+
+        // [HASLab] colorful Alloy
+        public void paintStrikeLine(Graphics g, Shape a) {
+            Color c = (Color) getElement().getAttributes().getAttribute("strike-color");
+            if (c != null) {
+                int y = a.getBounds().y + a.getBounds().height - (int) getGlyphPainter().getDescent(this);
+
+                y = y - (int) (getGlyphPainter().getAscent(this) * 0.5f);
+                int x1 = (int) a.getBounds().getX();
+                int x2 = (int) (a.getBounds().getX() + a.getBounds().getWidth());
+
+                Color old = g.getColor();
+                g.setColor(c);
+                g.drawRect(x1, y, x2 - x1, 1);
+                g.setColor(old);
+            }
+        }
+    }
+
+    /** The colors of each of the features. */
+    // [HASLab] colorful Alloy
+    public static Color C[] = {
+                               new Color(255, 225, 205), new Color(255, 205, 225), new Color(205, 255, 225), new Color(225, 255, 205), new Color(225, 205, 255), new Color(205, 225, 255), new Color(225, 255, 225), new Color(225, 225, 255), new Color(255, 225, 225)
+    };
 }

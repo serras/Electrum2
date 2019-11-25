@@ -915,6 +915,7 @@ public abstract class Sig extends Expr implements Clause {
                                                          // symbol, we assume
                                                          // it's oneOf
         final Field[] f = new Field[labels.length];
+        color.addAll(this.color); // [HASLab] parent presence required
         for (int i = 0; i < f.length; i++)
             f[i] = new Field(pos, isPrivate, isMeta, isDisjoint, isDisjoint2, this, labels[i], bound, color); // [HASLab] colorful conditions
         final Decl d = new Decl(isPrivate, isDisjoint, isDisjoint2, Arrays.asList(f), bound, color); // [HASLab] colorful conditions

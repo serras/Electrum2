@@ -146,7 +146,7 @@ public final class ExprList extends Expr {
             }
             return;
         }
-        list.add(expr);
+        list.add(x); // [HASLab] colorful, denop'ed for consistency
     }
 
     /**
