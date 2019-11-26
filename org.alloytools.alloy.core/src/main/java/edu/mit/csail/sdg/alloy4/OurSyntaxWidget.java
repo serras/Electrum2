@@ -179,7 +179,7 @@ public final class OurSyntaxWidget {
 
                     @Override
                     public View create(Element x) {
-                        if (AbstractDocument.ContentElementName.equals(x.getName())) // [HASLab] colorful strike out
+                        if (AbstractDocument.ContentElementName.equals(x.getName())) // [HASLab] strike out annotations
                             return new StrekableLabellView(x);
                         if (!AbstractDocument.SectionElementName.equals(x.getName()))
                             return defaultFactory.create(x);
@@ -211,7 +211,7 @@ public final class OurSyntaxWidget {
             pane.setCaretPosition(0);
         }
         doc.do_clearUndo();
-        // [HASLab] colorful Alloy, add the color features actions
+        // [HASLab] add feature annotation actions
         for (int i = 0; i < 9; i++) {
             final int k = i;
             pane.getActionMap().put("alloy_c" + (i + 1), new AbstractAction("alloy_c" + (i + 1)) {
@@ -329,7 +329,7 @@ public final class OurSyntaxWidget {
         pane.getInputMap().put(KeyStroke.getKeyStroke('/', OurConsole.menuShortcutKeyMask), "alloy-comment-block");
         pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0), "alloy_tab_insert");
         pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, InputEvent.SHIFT_DOWN_MASK), "alloy_tab_remove");
-        // [HASLab] colorful Alloy, keyboard shortcuts
+        // [HASLab] feature annotation keyboard shortcuts
         for (int i = 0; i < 9; i++) {
             pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_1 + i, InputEvent.CTRL_MASK), "alloy_c" + (i + 1));
             pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_1 + i, InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK), "alloy_s" + (i + 1));
@@ -591,11 +591,11 @@ public final class OurSyntaxWidget {
     /**
      * Shade the range of text from start (inclusive) to end (exclusive).
      */
-    // [HASLab] colorful Alloy, whether to strike out
+    // [HASLab] whether to strike out
     void shade(Color color, boolean strike, int start, int end) {
         int c = color.getRGB() & 0xFFFFFF;
         if (painter == null || (painter.color.getRGB() & 0xFFFFFF) != c)
-            painter = new OurHighlighter(color, strike); // [HASLab] colorful Alloy, whether to strike out
+            painter = new OurHighlighter(color, strike); // [HASLab] whether to strike out
         try {
             pane.getHighlighter().addHighlight(start, end, painter);
         } catch (Throwable ex) {} // exception is okay
@@ -924,8 +924,8 @@ public final class OurSyntaxWidget {
     }
 
 
-    /** Retrieve the Pos of the selected text in the editor. */
-    // [HASLab] colorful Alloy
+    /** Retrieve the positive annotations of the selected text in the editor. */
+    // [HASLab]
     public Pos getPosSelected() {
         int y1 = 1 + getLineOfOffset(pane.getSelectionStart());
         int y2 = 1 + getLineOfOffset(pane.getSelectionEnd());
@@ -935,7 +935,7 @@ public final class OurSyntaxWidget {
     }
 
     /** A label view with the ability to strike out text with colors. */
-    // [HASLab] colorful Alloy
+    // [HASLab]
     class StrekableLabellView extends LabelView {
 
         public StrekableLabellView(Element elem) {
@@ -949,7 +949,6 @@ public final class OurSyntaxWidget {
             paintStrikeLine(g, allocation);
         }
 
-        // [HASLab] colorful Alloy
         public void paintStrikeLine(Graphics g, Shape a) {
             Color c = (Color) getElement().getAttributes().getAttribute("strike-color");
             if (c != null) {
@@ -967,8 +966,8 @@ public final class OurSyntaxWidget {
         }
     }
 
-    /** The colors of each of the features. */
-    // [HASLab] colorful Alloy
+    /** The colors of each of the feature annotations. */
+    // [HASLab]
     public static Color C[] = {
                                new Color(255, 225, 205), new Color(255, 205, 225), new Color(205, 255, 225), new Color(225, 205, 255), new Color(225, 255, 205), new Color(205, 225, 255), new Color(225, 255, 225), new Color(225, 225, 255), new Color(255, 225, 225)
     };

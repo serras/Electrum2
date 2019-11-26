@@ -114,8 +114,8 @@ public final class ExprList extends Expr {
 
     /** Constructs an ExprList node. */
     // [HASLab] feature annotations
-    private ExprList(Pos pos, Pos closingBracket, Op op, boolean ambiguous, ConstList<Expr> args, long weight, JoinableList<Err> errs, Set<Integer> color) {
-        super(pos, closingBracket, ambiguous, Type.FORMULA, 0, weight, errs, color); // [HASLab] feature annotations
+    private ExprList(Pos pos, Pos closingBracket, Op op, boolean ambiguous, ConstList<Expr> args, long weight, JoinableList<Err> errs, Set<Integer> feats) {
+        super(pos, closingBracket, ambiguous, Type.FORMULA, 0, weight, errs, feats); // [HASLab] feature annotations
         this.op = op;
         this.args = args;
     }
@@ -132,8 +132,8 @@ public final class ExprList extends Expr {
             return;
         if (x instanceof ExprBinary && ((ExprBinary) x).op == ExprBinary.Op.AND) {
             // [HASLab] this destroys x, so feature annotations must be propagated
-            ((ExprBinary) x).left.paint(x.color);
-            ((ExprBinary) x).right.paint(x.color);
+            ((ExprBinary) x).left.paint(x.feats);
+            ((ExprBinary) x).right.paint(x.feats);
             addAND(list, ((ExprBinary) x).left);
             addAND(list, ((ExprBinary) x).right);
             return;
@@ -141,12 +141,12 @@ public final class ExprList extends Expr {
         if (x instanceof ExprList && ((ExprList) x).op == ExprList.Op.AND) {
             for (Expr y : ((ExprList) x).args) {
                 // [HASLab] this destroys x, so feature annotations must be propagated
-                y.paint(x.color);
+                y.paint(x.feats);
                 addAND(list, y);
             }
             return;
         }
-        list.add(x); // [HASLab] colorful, denop'ed for consistency (TODO: still needed?)
+        list.add(x); // [HASLab] denop'ed for annotation consistency (TODO: still needed?)
     }
 
     /**
@@ -159,8 +159,8 @@ public final class ExprList extends Expr {
             return;
         if (x instanceof ExprBinary && ((ExprBinary) x).op == ExprBinary.Op.OR) {
             // [HASLab] this destroys x, so feature annotations must be propagated
-            ((ExprBinary) x).left.paint(x.color);
-            ((ExprBinary) x).right.paint(x.color);
+            ((ExprBinary) x).left.paint(x.feats);
+            ((ExprBinary) x).right.paint(x.feats);
             addOR(list, ((ExprBinary) x).left);
             addOR(list, ((ExprBinary) x).right);
             return;
@@ -168,7 +168,7 @@ public final class ExprList extends Expr {
         if (x instanceof ExprList && ((ExprList) x).op == ExprList.Op.OR) {
             for (Expr y : ((ExprList) x).args) {
                 // [HASLab] this destroys x, so feature annotations must be propagated
-                y.paint(x.color);
+                y.paint(x.feats);
                 addOR(list, y);
             }
             return;
@@ -183,7 +183,7 @@ public final class ExprList extends Expr {
 
     /** Generates a call to a builtin predicate */
     // [HASLab] feature annotations
-    public static ExprList make(Pos pos, Pos closingBracket, Op op, List< ? extends Expr> args, Set<Integer> color) {
+    public static ExprList make(Pos pos, Pos closingBracket, Op op, List< ? extends Expr> args, Set<Integer> feats) {
         boolean ambiguous = false;
         JoinableList<Err> errs = emptyListOfErrors;
         TempList<Expr> newargs = new TempList<Expr>(args.size());
@@ -226,7 +226,7 @@ public final class ExprList extends Expr {
             if (commonArity == EMPTY)
                 errs = errs.make(new ErrorType(pos, "The builtin predicate disjoint[] cannot be used among expressions of different arities."));
         }
-        return new ExprList(pos, closingBracket, op, ambiguous, newargs.makeConst(), weight, errs, color); // [HASLab] feature annotations
+        return new ExprList(pos, closingBracket, op, ambiguous, newargs.makeConst(), weight, errs, feats); // [HASLab] feature annotations
     }
 
     /** Generates the expression (arg1 and arg2) */
@@ -308,7 +308,7 @@ public final class ExprList extends Expr {
             changed = (a != args.get(0) || b != args.get(1) || c != args.get(2));
             newargs.add(a).add(b).add(c);
         }
-        return changed ? make(pos, closingBracket, op, newargs.makeConst(), color) : this; // [HASLab] feature annotations
+        return changed ? make(pos, closingBracket, op, newargs.makeConst(), feats) : this; // [HASLab] feature annotations
     }
 
     // ============================================================================================================//

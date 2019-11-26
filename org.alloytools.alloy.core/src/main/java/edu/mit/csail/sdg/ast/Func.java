@@ -210,14 +210,14 @@ public final class Func extends Browsable implements Clause {
      *             predicate/function call
      */
     // [HASLab] feature annotations
-    public Func(Pos pos, Pos isPrivate, String label, List<Decl> decls, Expr returnDecl, Expr body, Set<Integer> color) throws Err {
+    public Func(Pos pos, Pos isPrivate, String label, List<Decl> decls, Expr returnDecl, Expr body, Set<Integer> feats) throws Err {
         if (pos == null)
             pos = Pos.UNKNOWN;
         this.pos = pos;
         this.isPrivate = isPrivate;
         this.label = (label == null ? "" : label);
         this.isPred = (returnDecl == null);
-        this.color = color; // [HASLab] feature annotations
+        this.feats = feats; // [HASLab] feature annotations
         if (returnDecl == null)
             returnDecl = ExprConstant.FALSE;
         if (returnDecl.mult == 0 && returnDecl.type.arity() == 1)

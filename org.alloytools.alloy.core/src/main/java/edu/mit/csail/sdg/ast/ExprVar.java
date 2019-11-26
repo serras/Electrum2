@@ -52,8 +52,8 @@ public final class ExprVar extends ExprHasName implements Clause {
 
     /** Constructs an ExprVar object */
     // [HASLab] feature annotations
-    private ExprVar(Pos pos, String label, Type type, Set<Integer> color) {
-        super(pos, label, type, color); // [HASLab] feature annotations
+    private ExprVar(Pos pos, String label, Type type, Set<Integer> feats) {
+        super(pos, label, type, feats); // [HASLab] feature annotations
     }
 
     /**
@@ -91,8 +91,8 @@ public final class ExprVar extends ExprHasName implements Clause {
      * @param type - the type
      */
     // [HASLab] feature annotations
-    public static ExprVar make(Pos pos, String label, Type type, Set<Integer> color) {
-        return new ExprVar(pos, label, type, color); // [HASLab] feature annotations
+    public static ExprVar make(Pos pos, String label, Type type, Set<Integer> feats) {
+        return new ExprVar(pos, label, type, feats); // [HASLab] feature annotations
     }
 
     /** {@inheritDoc} */

@@ -281,8 +281,8 @@ public final class ExprCall extends Expr {
      * of arguments "args".
      */
     // [HASLab] feature annotations
-    private ExprCall(Pos pos, Pos closingBracket, boolean ambiguous, Type type, Func fun, ConstList<Expr> args, long extraWeight, long weight, JoinableList<Err> errs, Set<Integer> color) {
-        super(pos, closingBracket, ambiguous, type, 0, weight, errs, color); // [HASLab] feature annotations
+    private ExprCall(Pos pos, Pos closingBracket, boolean ambiguous, Type type, Func fun, ConstList<Expr> args, long extraWeight, long weight, JoinableList<Err> errs, Set<Integer> feats) {
+        super(pos, closingBracket, ambiguous, type, 0, weight, errs, feats); // [HASLab] feature annotations
         this.fun = fun;
         this.args = args;
         this.extraWeight = extraWeight;
@@ -326,7 +326,7 @@ public final class ExprCall extends Expr {
      * list of arguments "args".
      */
     // [HASLab] feature annotations
-    public static Expr make(Pos pos, Pos closingBracket, Func fun, List<Expr> args, long extraPenalty, Set<Integer> color) {
+    public static Expr make(Pos pos, Pos closingBracket, Func fun, List<Expr> args, long extraPenalty, Set<Integer> feats) {
         if (extraPenalty < 0)
             extraPenalty = 0;
         if (args == null)
@@ -369,7 +369,7 @@ public final class ExprCall extends Expr {
                 t = tt; // Just in case an error occurred...
             }
         }
-        return new ExprCall(pos, closingBracket, ambiguous, t, fun, newargs.makeConst(), extraPenalty, weight, errs, color); // [HASLab] feature annotations
+        return new ExprCall(pos, closingBracket, ambiguous, t, fun, newargs.makeConst(), extraPenalty, weight, errs, feats); // [HASLab] feature annotations
     }
 
     // ============================================================================================================//

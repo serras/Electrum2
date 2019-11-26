@@ -122,8 +122,8 @@ public final class ExprUnary extends Expr {
 
     /** Constructs an unary expression. */
     // [HASLab] feature annotations
-    private ExprUnary(Pos pos, Op op, Expr sub, Type type, long weight, JoinableList<Err> errors, Set<Integer> color) {
-        super(pos, null, sub.ambiguous, type, (op == Op.EXACTLYOF || op == Op.SOMEOF || op == Op.LONEOF || op == Op.ONEOF || op == Op.SETOF) ? 1 : 0, weight, errors, color); // [HASLab] feature annotations
+    private ExprUnary(Pos pos, Op op, Expr sub, Type type, long weight, JoinableList<Err> errors, Set<Integer> feats) {
+        super(pos, null, sub.ambiguous, type, (op == Op.EXACTLYOF || op == Op.SOMEOF || op == Op.LONEOF || op == Op.ONEOF || op == Op.SETOF) ? 1 : 0, weight, errors, feats); // [HASLab] feature annotations
         this.op = op;
         this.sub = sub;
     }
@@ -234,8 +234,8 @@ public final class ExprUnary extends Expr {
          *            ExprUnary's constructor never sees it)
          */
         // [HASLab] feature annotations
-        public final Expr make(Pos pos, Expr sub, Set<Integer> color) {
-            return make(pos, sub, null, 0, color); // [HASLab] feature annotations
+        public final Expr make(Pos pos, Expr sub, Set<Integer> feats) {
+            return make(pos, sub, null, 0, feats); // [HASLab] feature annotations
         }
 
         /**
@@ -279,7 +279,7 @@ public final class ExprUnary extends Expr {
          *            ExprUnary's constructor never sees it)
          */
         // [HASLab] feature annotations
-        public final Expr make(Pos pos, Expr sub, Err extraError, long extraWeight, Set<Integer> color) {
+        public final Expr make(Pos pos, Expr sub, Err extraError, long extraWeight, Set<Integer> feats) {
             if (pos == null || pos == Pos.UNKNOWN) {
                 if (this == NOOP)
                     pos = sub.pos;
@@ -375,7 +375,7 @@ public final class ExprUnary extends Expr {
                         type = SIGINT.type;
                         break;
                 }
-            return new ExprUnary(pos, this, sub, type, extraWeight + sub.weight, errors.make(extraError), color); // [HASLab] feature annotations
+            return new ExprUnary(pos, this, sub, type, extraWeight + sub.weight, errors.make(extraError), feats); // [HASLab] feature annotations
         }
 
         /** Returns the human readable label for this operator */

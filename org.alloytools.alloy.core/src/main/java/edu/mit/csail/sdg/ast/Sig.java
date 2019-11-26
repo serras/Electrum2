@@ -276,8 +276,8 @@ public abstract class Sig extends Expr implements Clause {
 
     /** Constructs a new PrimSig or SubsetSig. */
     // [HASLab] feature annotations
-    private Sig(Type type, String label, Set<Integer> color, Attr... attributes) throws Err {
-        super(AttrType.WHERE.find(attributes), type, color); // [HASLab] feature annotations
+    private Sig(Type type, String label, Set<Integer> feats, Attr... attributes) throws Err {
+        super(AttrType.WHERE.find(attributes), type, feats); // [HASLab] feature annotations
         this.attributes = Util.asList(attributes);
         Expr oneof = ExprUnary.Op.ONEOF.make(null, this);
         ExprVar v = ExprVar.make(null, "this", oneof.type);
@@ -504,8 +504,8 @@ public abstract class Sig extends Expr implements Clause {
          *             SEQIDX, or STRING
          */
         // [HASLab] feature annotations
-        public PrimSig(String label, PrimSig parent, Set<Integer> color, Attr... attributes) throws Err {
-            super(((parent != null && parent.isEnum != null) ? parent.type : null), label, color, Util.append(attributes, Attr.SUBSIG)); // [HASLab] feature annotations
+        public PrimSig(String label, PrimSig parent, Set<Integer> feats, Attr... attributes) throws Err {
+            super(((parent != null && parent.isEnum != null) ? parent.type : null), label, feats, Util.append(attributes, Attr.SUBSIG)); // [HASLab] feature annotations
             if (parent == SIGINT)
                 throw new ErrorSyntax(pos, "sig " + label + " cannot extend the builtin \"Int\" signature");
             if (parent == SEQIDX)
@@ -654,8 +654,8 @@ public abstract class Sig extends Expr implements Clause {
          * @throws ErrorType if parents only contains NONE
          */
         // [HASLab] feature annotations
-        public SubsetSig(String label, Collection<Sig> parents, Set<Integer> color, Attr... attributes) throws Err {
-            super(getType(label, parents), label, color, Util.append(attributes, Attr.SUBSET)); // [HASLab] feature annotations
+        public SubsetSig(String label, Collection<Sig> parents, Set<Integer> feats, Attr... attributes) throws Err {
+            super(getType(label, parents), label, feats, Util.append(attributes, Attr.SUBSET)); // [HASLab] feature annotations
 
             if (isEnum != null)
                 throw new ErrorType(pos, "Subset signature cannot be an enum.");
@@ -733,8 +733,8 @@ public abstract class Sig extends Expr implements Clause {
 
         /** Constructs a new Field object. */
         // [HASLab] feature annotations
-        private Field(Pos pos, Pos isPrivate, Pos isMeta, Pos disjoint, Pos disjoint2, Sig sig, String label, Expr bound, Set<Integer> color) throws Err {
-            super(pos, label, sig.type.product(bound.type), color); // [HASLab] feature annotations
+        private Field(Pos pos, Pos isPrivate, Pos isMeta, Pos disjoint, Pos disjoint2, Sig sig, String label, Expr bound, Set<Integer> feats) throws Err {
+            super(pos, label, sig.type.product(bound.type), feats); // [HASLab] feature annotations
             this.defined = bound.mult() == ExprUnary.Op.EXACTLYOF;
             if (sig.builtin)
                 throw new ErrorSyntax(pos, "Builtin sig \"" + sig + "\" cannot have fields.");
@@ -900,7 +900,7 @@ public abstract class Sig extends Expr implements Clause {
      *             set/relation
      */
     // [HASLab] feature annotations
-    public final Field[] addTrickyField(Pos pos, Pos isPrivate, Pos isDisjoint, Pos isDisjoint2, Pos isMeta, String[] labels, Expr bound, Set<Integer> color) throws Err {
+    public final Field[] addTrickyField(Pos pos, Pos isPrivate, Pos isDisjoint, Pos isDisjoint2, Pos isMeta, String[] labels, Expr bound, Set<Integer> feats) throws Err {
         bound = bound.typecheck_as_set();
         if (bound.ambiguous)
             bound = bound.resolve_as_set(null);
@@ -910,10 +910,10 @@ public abstract class Sig extends Expr implements Clause {
                                                          // symbol, we assume
                                                          // it's oneOf
         final Field[] f = new Field[labels.length];
-        color.addAll(this.color); // [HASLab] fields inherit parent presence conditions
+        feats.addAll(this.feats); // [HASLab] fields inherit parent presence conditions
         for (int i = 0; i < f.length; i++)
-            f[i] = new Field(pos, isPrivate, isMeta, isDisjoint, isDisjoint2, this, labels[i], bound, color); // [HASLab] feature annotations
-        final Decl d = new Decl(isPrivate, isDisjoint, isDisjoint2, Arrays.asList(f), bound, color); // [HASLab] feature annotations
+            f[i] = new Field(pos, isPrivate, isMeta, isDisjoint, isDisjoint2, this, labels[i], bound, feats); // [HASLab] feature annotations
+        final Decl d = new Decl(isPrivate, isDisjoint, isDisjoint2, Arrays.asList(f), bound, feats); // [HASLab] feature annotations
         for (int i = 0; i < f.length; i++) {
             f[i].decl = d;
             realFields.add(f[i]);

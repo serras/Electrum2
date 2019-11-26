@@ -39,13 +39,13 @@ public final class OurHighlighter implements Highlighter.HighlightPainter {
     public final Color   color;
 
     /** Whether to strike out rather than highlight. */
-    // [HASLab] colorful annotations
+    // [HASLab]
     public final boolean strike;
 
     /** Construct a highlighter with the given color and whether to strike out. */
-    // [HASLab] colorful annotations
+    // [HASLab]
     public OurHighlighter(Color color, boolean strike) {
-        this.color = color; // [HASLab] colorful annotations
+        this.color = color; // [HASLab] annotation color
         this.strike = strike;
     }
 
@@ -61,7 +61,7 @@ public final class OurHighlighter implements Highlighter.HighlightPainter {
                 // same line (Note: furthermore, if start==end, then we draw all
                 // the way to the right edge)
                 Rectangle r = a.union(b);
-                // [HASLab] colorful, if strike, strike out rather than highlight
+                // [HASLab] whether to strike out rather than highlight
                 if (!strike)
                     gr.fillRect(r.x, r.y, (r.width <= 1 ? (box.x + box.width - r.x) : r.width), r.height);
                 else

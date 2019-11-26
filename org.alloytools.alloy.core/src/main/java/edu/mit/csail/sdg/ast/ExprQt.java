@@ -160,8 +160,8 @@ public final class ExprQt extends Expr {
 
     /** Constructs a new quantified expression. */
     // [HASLab] feature annotations
-    private ExprQt(Pos pos, Pos closingBracket, Op op, Type type, ConstList<Decl> decls, Expr sub, boolean ambiguous, long weight, JoinableList<Err> errs, Set<Integer> color) {
-        super(pos, closingBracket, ambiguous, type, 0, weight, errs, color); // [HASLab] feature annotations
+    private ExprQt(Pos pos, Pos closingBracket, Op op, Type type, ConstList<Decl> decls, Expr sub, boolean ambiguous, long weight, JoinableList<Err> errs, Set<Integer> feats) {
+        super(pos, closingBracket, ambiguous, type, 0, weight, errs, feats); // [HASLab] feature annotations
         this.op = op;
         this.decls = decls;
         this.sub = sub;
@@ -223,7 +223,7 @@ public final class ExprQt extends Expr {
          * @param sub - the body of the expression
          */
         // [HASLab] feature annotations
-        public final Expr make(Pos pos, Pos closingBracket, List<Decl> decls, Expr sub, Set<Integer> color) {
+        public final Expr make(Pos pos, Pos closingBracket, List<Decl> decls, Expr sub, Set<Integer> feats) {
             Type t = this == SUM ? Type.smallIntType() : (this == COMPREHENSION ? Type.EMPTY : Type.FORMULA);
             if (this != SUM)
                 sub = sub.typecheck_as_formula();
@@ -279,7 +279,7 @@ public final class ExprQt extends Expr {
                 errs = sub.errors; // if the vars have errors, then the
                                   // subexpression's errors will be too
                                   // confusing, so let's skip them
-            return new ExprQt(pos, closingBracket, this, t, ConstList.make(decls), sub, ambiguous, weight, errs, color); // [HASLab] feature annotations
+            return new ExprQt(pos, closingBracket, this, t, ConstList.make(decls), sub, ambiguous, weight, errs, feats); // [HASLab] feature annotations
         }
 
         /** Returns the human readable label for this operator */

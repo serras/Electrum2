@@ -51,7 +51,7 @@ public abstract class Browsable {
      * The presence/absence annotations for this browsable element.
      */
     // [HASLab]
-    public Set<Integer> color = new HashSet<Integer>();
+    public Set<Integer> feats = new HashSet<Integer>();
 
     /**
      * Paints this browsable element with a presence/absence annotation.
@@ -60,9 +60,9 @@ public abstract class Browsable {
      */
     // [HASLab]
     public void paint(int c) throws ErrorColor {
-        if (color.contains(-c))
+        if (feats.contains(-c))
             throw new ErrorSyntax(this.pos(), "Negative and positive of same feature: " + this);
-        color.add(c);
+        feats.add(c);
     }
 
     /**
@@ -73,7 +73,7 @@ public abstract class Browsable {
     // [HASLab]
     public void paint(Collection<Integer> c) {
         // TODO: type check
-        color.addAll(c);
+        feats.addAll(c);
     }
 
     /**

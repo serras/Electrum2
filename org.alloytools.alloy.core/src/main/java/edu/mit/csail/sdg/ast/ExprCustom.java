@@ -49,8 +49,8 @@ public abstract class ExprCustom extends Expr {
      * @param error - the error to display if this node does not get desugared
      */
     // [HASLab] feature annotations
-    public ExprCustom(Pos pos, Err error, Set<Integer> color) {
-        super(pos, null, false, EMPTY, 0, 0, new JoinableList<Err>(error), color); // [HASLab] feature annotations
+    public ExprCustom(Pos pos, Err error, Set<Integer> feats) {
+        super(pos, null, false, EMPTY, 0, 0, new JoinableList<Err>(error), feats); // [HASLab] feature annotations
         if (error == null)
             throw new NullPointerException();
     }

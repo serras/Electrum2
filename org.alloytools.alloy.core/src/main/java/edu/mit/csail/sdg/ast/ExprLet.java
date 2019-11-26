@@ -86,8 +86,8 @@ public final class ExprLet extends Expr {
 
     /** Constructs a LET expression. */
     // [HASLab] feature annotations
-    private ExprLet(Pos pos, ExprVar var, Expr expr, Expr sub, JoinableList<Err> errs, Set<Integer> color) {
-        super(pos, null, expr.ambiguous || sub.ambiguous, sub.type, 0, var.weight + expr.weight + sub.weight, errs, color); // [HASLab] feature annotations
+    private ExprLet(Pos pos, ExprVar var, Expr expr, Expr sub, JoinableList<Err> errs, Set<Integer> feats) {
+        super(pos, null, expr.ambiguous || sub.ambiguous, sub.type, 0, var.weight + expr.weight + sub.weight, errs, feats); // [HASLab] feature annotations
         this.var = var;
         this.expr = expr;
         this.sub = sub;
@@ -118,7 +118,7 @@ public final class ExprLet extends Expr {
      *            "var" as a free variable)
      */
     // [HASLab] feature annotations
-    public static Expr make(Pos pos, ExprVar var, Expr expr, Expr sub, Set<Integer> color) {
+    public static Expr make(Pos pos, ExprVar var, Expr expr, Expr sub, Set<Integer> feats) {
         if (expr.ambiguous)
             expr = expr.resolve(expr.type, null);
         JoinableList<Err> errs = var.errors.make(expr.errors).make(sub.errors);
@@ -130,7 +130,7 @@ public final class ExprLet extends Expr {
             if (/* [AM] var.type.is_int()!=expr.type.is_int()|| */
             var.type.is_bool != expr.type.is_bool || var.type.arity() != expr.type.arity())
                 errs = errs.make(new ErrorType(var.span(), "This variable has type " + var.type + " but is bound to a value of type " + expr.type));
-        return new ExprLet(pos, var, expr, sub, errs, color); // [HASLab] feature annotations
+        return new ExprLet(pos, var, expr, sub, errs, feats); // [HASLab] feature annotations
     }
 
     // =============================================================================================================//
@@ -145,7 +145,7 @@ public final class ExprLet extends Expr {
         Expr newSub = sub.resolve(p, warns);
         if (warns != null && !newSub.hasVar(var))
             warns.add(new ErrorWarning(var.pos, "This variable is unused."));
-        return (sub == newSub) ? this : make(pos, var, expr, newSub, color); // [HASLab] feature annotations
+        return (sub == newSub) ? this : make(pos, var, expr, newSub, feats); // [HASLab] feature annotations
     }
 
     // =============================================================================================================//

@@ -55,10 +55,10 @@ class OurSyntaxDocument extends DefaultStyledDocument {
     /**
      * The style mode at the start of each line. First field is "comment mode" (0 =
      * no comment) (1 = block comment) (2 = javadoc comment) (-1 = unknown).
-     * Remainder are colorful features (0 = not marked) (1 = positive mark) (2 =
+     * Remainder are feature annotations (0 = not marked) (1 = positive mark) (2 =
      * negative mark) (-1 = unknown).
      */
-    // [HASLab] colorful, adapted to also consider features
+    // [HASLab] adapted to also consider feature annotations
     private final List<List<Mode>>          comments         = new ArrayList<List<Mode>>();
 
     /**
@@ -87,7 +87,7 @@ class OurSyntaxDocument extends DefaultStyledDocument {
         all.add(styleNormal);
     }
 
-    // [HASLab] colorful annotations
+    // [HASLab] feature annotations
     private final MutableAttributeSet styleNormal(List<Mode> n) {
         return style(font, fontSize, false, false, false, Color.BLACK, getPos(n), getNeg(n), 0);
     }
@@ -98,7 +98,7 @@ class OurSyntaxDocument extends DefaultStyledDocument {
         all.add(styleSymbol);
     }
 
-    // [HASLab] colorful annotations
+    // [HASLab] feature annotations
     private final MutableAttributeSet styleSymbol(List<Mode> n) {
         return style(font, fontSize, true, false, false, Color.BLACK, getPos(n), getNeg(n), 0);
     }
@@ -158,7 +158,7 @@ class OurSyntaxDocument extends DefaultStyledDocument {
         all.add(styleNumber);
     }
 
-    // [HASLab] colorful
+    // [HASLab] feature annotations
     private final MutableAttributeSet styleNumber(List<Mode> n) {
         return style(font, fontSize, true, false, false, new Color(0xA80A0A), getPos(n), getNeg(n), 0);
     }
@@ -169,7 +169,7 @@ class OurSyntaxDocument extends DefaultStyledDocument {
         all.add(styleKeyword);
     }
 
-    // [HASLab] colorful annotations
+    // [HASLab] feature annotations
     private final MutableAttributeSet styleKeyword(List<Mode> n) {
         return style(font, fontSize, true, false, false, new Color(0x1E1EA8), getPos(n), getNeg(n), 0);
     }
@@ -180,19 +180,21 @@ class OurSyntaxDocument extends DefaultStyledDocument {
         all.add(styleString);
     }
 
-    // [HASLab] colorful annotations
+    // [HASLab] feature annotations
     private final MutableAttributeSet styleString(List<Mode> n) {
         return style(font, fontSize, false, false, false, new Color(0xA80AA8), getPos(n), getNeg(n), 0);
     }
 
     /** The character style for featured text. */
-    // [HASLab] colorful annotations
+    // [HASLab] feature annotations
     private final MutableAttributeSet styleColorMark(List<Mode> n, Color c) {
         return style(font, fontSize, true, false, false, new Color(c.getRed() - 41, c.getGreen() - 41, c.getBlue() - 41), getPos(n), getNeg(n), 0);
     }
 
-    /** Convert the list of positive features (1) into a list of colors. */
-    // [HASLab] colorful Alloy
+    /**
+     * Convert the list of positive feature annotations (1) into a list of colors.
+     */
+    // [HASLab]
     private static Set<Color> getPos(List<Mode> n) {
         Set<Color> res = new HashSet<Color>();
         for (int i = 1; i <= 9; i++)
@@ -201,8 +203,10 @@ class OurSyntaxDocument extends DefaultStyledDocument {
         return res;
     }
 
-    /** Convert the list of negative features (2) into a list of colors. */
-    // [HASLab] colorful Alloy
+    /**
+     * Convert the list of negative feature annotations (2) into a list of colors.
+     */
+    // [HASLab]
     private static Set<Color> getNeg(List<Mode> n) {
         Set<Color> res = new HashSet<Color>();
         for (int i = 1; i <= 9; i++)
@@ -239,7 +243,7 @@ class OurSyntaxDocument extends DefaultStyledDocument {
     /**
      * This stores the currently recognized set of reserved keywords.
      */
-    private static final String[]     keywords = new String[] { // [HASLab] colorful keywords
+    private static final String[]     keywords = new String[] { // [HASLab] feature keywords
                                                                "abstract", "all", "and", "as", "assert", "but", "check", "disj", "disjoint", "else", "enum", "exactly", "exh", "exhaustive", "expect", "extends", "fact", "for", "fun", "iden", "iff", "implies", "in", "Int", "int", "let", "lone", "module", "no", "none", "not", "one", "open", "or", "part", "partition", "pred", "private", "run", "seq", "set", "sig", "some", "String", "sum", "this", "univ", "with"
     };
 
@@ -268,18 +272,18 @@ class OurSyntaxDocument extends DefaultStyledDocument {
         return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '$' || (c >= '0' && c <= '9') || c == '_' || c == '\'' || c == '\"';
     }
 
-    /** The first positive/negative color feature delimiters. */
-    // [HASLab] colorful annotations
+    /** The first positive/negative feature annotation delimiters. */
+    // [HASLab]
     public static char O1 = '\u2780', E1 = '\u278A';
 
-    /** Whether a positive color feature delimiter. */
-    // [HASLab] colorful annotations
+    /** Whether a positive feature annotation delimiter. */
+    // [HASLab]
     private static final boolean isPositiveColor(char c) {
         return (c >= O1 && c <= (char) (O1 + 8));
     }
 
-    /** Whether a negative color feature delimiter. */
-    // [HASLab] colorful annotations
+    /** Whether a negative feature annotation delimiter. */
+    // [HASLab]
     private static final boolean isNegativeColor(char c) {
         return (c >= E1 && c <= (char) (E1 + 8));
     }
@@ -376,7 +380,7 @@ class OurSyntaxDocument extends DefaultStyledDocument {
                                                    // in "comments" array down
             if (string.charAt(i) == '\n') {
                 if (startLine < comments.size() - 1)
-                    comments.add(startLine + 1, new ArrayList<Mode>(Arrays.asList(Mode.NONE))); // [HASLab] colorful annotations
+                    comments.add(startLine + 1, new ArrayList<Mode>(Arrays.asList(Mode.NONE))); // [HASLab] annotation mode
             }
         }
         super.insertString(offset, string, styleNormal);
@@ -432,9 +436,9 @@ class OurSyntaxDocument extends DefaultStyledDocument {
     private final void do_update(int line) throws BadLocationException {
         String content = toString();
         int lineCount = do_getLineCount();
-        while (line > 0 && (line >= comments.size() || comments.get(line).contains(Mode.NONE))) // [HASLab] colorful annotations
+        while (line > 0 && (line >= comments.size() || comments.get(line).contains(Mode.NONE))) // [HASLab] annotation mode
             line--; // "-1" in comments array are always contiguous
-        List<Mode> comment = do_reapply(line == 0 ? new ArrayList<Mode>(Arrays.asList(Mode.ALLOY)) : comments.get(line), content, line); // [HASLab] colorful annotations
+        List<Mode> comment = do_reapply(line == 0 ? new ArrayList<Mode>(Arrays.asList(Mode.ALLOY)) : comments.get(line), content, line); // [HASLab] annotation mode
         for (line++; line < lineCount; line++) { // update each subsequent line
                                                 // until it already starts
                                                 // with its expected comment
@@ -458,7 +462,7 @@ class OurSyntaxDocument extends DefaultStyledDocument {
                LINE_COMMENT,
                YAML,
                MARKDOWN,
-               // [HASLab] colorful modes
+               // [HASLab] annotation modes
                PFEAT1,
                PFEAT2,
                PFEAT3,
@@ -480,13 +484,13 @@ class OurSyntaxDocument extends DefaultStyledDocument {
                FEATURESCOPE;
     }
 
-    // [HASLab] list of color modes rather than single comment mode
+    // [HASLab] list of annotation modes rather than single comment mode
     private final List<Mode> do_reapply(List<Mode> mode, final String txt, final int line) {
-        // [HASLab] colorful modes
+        // [HASLab] annotation mode
         while (line >= comments.size())
-            comments.add(new ArrayList<Mode>(Arrays.asList(Mode.NONE))); // enlarge array if needed // [HASLab]
+            comments.add(new ArrayList<Mode>(Arrays.asList(Mode.NONE))); // enlarge array if needed // [HASLab] annotation mode
 
-        // [HASLab] colorful Alloy, must clone list
+        // [HASLab] annotation mode, must clone list
         comments.set(line, new ArrayList<Mode>(mode)); // record the fact that this line starts
         // with the given comment mode
         int startOfLine = do_getLineStartOffset(line);
@@ -586,10 +590,10 @@ class OurSyntaxDocument extends DefaultStyledDocument {
                     i = i + 2;
                     mode = new ArrayList<Mode>(Arrays.asList(Mode.ALLOY)); // [HASLab]
                 }
-                setCharacterAttributes(oldi, i - oldi, style, false); // [HASLab] colorful, must force update for strikes
+                setCharacterAttributes(oldi, i - oldi, style, false); // [HASLab] must force update for strikes (TODO: check whether needed)
             } else if ((c == '/' || c == '-') && i < n - 1 && txt.charAt(i + 1) == c) {
                 i = txt.indexOf('\n', i);
-                setCharacterAttributes(oldi, i < 0 ? (n - oldi) : (i - oldi), styleComment, false); // [HASLab] colorful, must force update for strikes
+                setCharacterAttributes(oldi, i < 0 ? (n - oldi) : (i - oldi), styleComment, false); // [HASLab] must force update for strikes (TODO: check whether needed)
                 break;
             } else if (c == '\"') {
                 for (i++; i < n; i++) {
@@ -602,8 +606,8 @@ class OurSyntaxDocument extends DefaultStyledDocument {
                     if (txt.charAt(i) == '\\' && i + 1 < n && txt.charAt(i + 1) != '\n')
                         i++;
                 }
-                setCharacterAttributes(oldi, i - oldi, styleString(mode), false); // [HASLab] colorful, must force update for strikes
-            } else if ((isNegativeColor(c) || isPositiveColor(c))) { // [HASLab] colorful, check for delimiters and change style mode
+                setCharacterAttributes(oldi, i - oldi, styleString(mode), false); // [HASLab] must force update for strikes (TODO: check whether needed)
+            } else if ((isNegativeColor(c) || isPositiveColor(c))) { // [HASLab] check for annotation delimiters and change style mode
                 i++;
                 boolean opens = true;
                 // if already with style, invert
@@ -626,19 +630,19 @@ class OurSyntaxDocument extends DefaultStyledDocument {
             } else if (do_iden(c)) {
                 for (i++; i < n && do_iden(txt.charAt(i)); i++) {}
                 AttributeSet style = (c >= '0' && c <= '9') ? styleNumber(mode) : (do_keyword(txt, oldi, i - oldi) ? styleKeyword(mode) : styleNormal(mode)); // [HASLab]
-                setCharacterAttributes(oldi, i - oldi, style, false); // [HASLab] colorful Alloy, must force update for strikes
-                if (do_keyword(txt, oldi, i - oldi)) { // [HASLab]
+                setCharacterAttributes(oldi, i - oldi, style, false); // [HASLab] must force update for strikes (TODO: check whether needed)
+                if (do_keyword(txt, oldi, i - oldi)) { // [HASLab] ??
                     if (txt.charAt(oldi) == 'w')
                         mode.add(Mode.FEATURESCOPE);
                     else if (txt.charAt(oldi) != 'e')
                         mode.remove(Mode.FEATURESCOPE);
                 }
             } else {
-                for (i++; i < n && !do_iden(txt.charAt(i)) && txt.charAt(i) != '\n' && txt.charAt(i) != '-' && txt.charAt(i) != '/' && !isPositiveColor(txt.charAt(i)) && !isNegativeColor(txt.charAt(i)); i++) {}  // [HASLab] colorful, do not ignore color marks
-                setCharacterAttributes(oldi, i - oldi, styleSymbol(mode), false); // [HASLab] colorful, must force update for strikes
+                for (i++; i < n && !do_iden(txt.charAt(i)) && txt.charAt(i) != '\n' && txt.charAt(i) != '-' && txt.charAt(i) != '/' && !isPositiveColor(txt.charAt(i)) && !isNegativeColor(txt.charAt(i)); i++) {}  // [HASLab] do not ignore feature annotations
+                setCharacterAttributes(oldi, i - oldi, styleSymbol(mode), false); // [HASLab] must force update for strikes (TODO: check whether needed)
             }
         }
-        mode.remove(Mode.FEATURESCOPE); // [HASLab]
+        mode.remove(Mode.FEATURESCOPE); // [HASLab] annotation mode
         return mode;
     }
 
@@ -658,9 +662,9 @@ class OurSyntaxDocument extends DefaultStyledDocument {
         setCharacterAttributes(0, getLength(), styleNormal, true);
         comments.clear();
         String content = toString();
-        List<Mode> mode = new ArrayList<Mode>(Arrays.asList(Mode.ALLOY)); // [HASLab] colorful annotations
+        List<Mode> mode = new ArrayList<Mode>(Arrays.asList(Mode.ALLOY)); // [HASLab] annotation mode
         for (int i = 0, n = do_getLineCount(); i < n; i++)
-            mode = do_reapply(mode, content, i); // [HASLab] colorful annotations
+            mode = do_reapply(mode, content, i); // [HASLab] annotation mode
     }
 
     /** Changes the font and tabsize for the document. */

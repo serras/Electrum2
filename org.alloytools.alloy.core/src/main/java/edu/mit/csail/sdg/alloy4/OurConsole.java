@@ -152,10 +152,10 @@ public final class OurConsole extends JScrollPane {
      * Helper method that construct a mutable style with the given font name, font
      * size, boldness, color, feature coloring, and left indentation.
      */
-    // [HASLab] colorful annotations
+    // [HASLab] positive/negative annotations
     static MutableAttributeSet style(String fontName, int fontSize, boolean boldness, boolean italic, boolean strike, Color color, Set<Color> pos, Set<Color> neg, int leftIndent) {
         MutableAttributeSet s = style(fontName, fontSize, boldness, italic, strike, color, leftIndent);
-        // [HASLab] colorful, mix all positive colors
+        // [HASLab] mix all positive annotations
         Color bg = new Color(255, 255, 255);
         if (!pos.isEmpty()) {
             int r = 0, g = 0, b = 0;
@@ -169,7 +169,7 @@ public final class OurConsole extends JScrollPane {
         }
         StyleConstants.setBackground(s, bg);
 
-        // [HASLab] colorful, mix all negative colors
+        // [HASLab] mix all negative annotations
         if (!neg.isEmpty()) {
             int r = 0, g = 0, b = 0;
             for (Color c : neg) {

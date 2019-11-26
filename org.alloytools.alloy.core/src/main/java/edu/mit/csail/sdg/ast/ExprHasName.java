@@ -37,8 +37,8 @@ public abstract class ExprHasName extends Expr {
 
     /** Constructs an ExprHasName object */
     // [HASLab] feature annotations
-    ExprHasName(Pos pos, String label, Type type, Set<Integer> color) {
-        super(pos, null, false, type, 0, 0, null, color); // [HASLab] feature annotations
+    ExprHasName(Pos pos, String label, Type type, Set<Integer> feats) {
+        super(pos, null, false, type, 0, 0, null, feats); // [HASLab] feature annotations
         this.label = (label == null ? "" : label);
     }
 

@@ -87,8 +87,8 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
         Set<Sig> all_sigs = new HashSet<Sig>(trans.oldsig2new.values());
         Iterable<Func> all_funcs = new SafeList<>(trans.oldfunc2new.values());
         all_sigs.addAll(trans.used_feats.values());
-        all_sigs.add(trans.feature_sig);
-        all_sigs.add(trans.variant_sig);
+        all_sigs.add(TranslateColorfulToAlloy.feature_sig);
+        all_sigs.add(TranslateColorfulToAlloy.variant_sig);
         return new Pair<>(new_cmd, new Pair<>(all_sigs, all_funcs));
     }
 
@@ -119,12 +119,12 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
      * Creates an expression representing the selected positive/negative marks. Will
      * create and store feature sigs as needed.
      *
-     * @param colors a set of presence/absence conditions
+     * @param feats a set of presence/absence conditions
      * @return the corresponding formula
      */
-    private Expr presenceCondition(Collection<Integer> colors) {
+    private Expr presenceCondition(Collection<Integer> feats) {
         List<Expr> args = new ArrayList<Expr>();
-        for (int i : colors) {
+        for (int i : feats) {
             Sig s = used_feats.get(Math.abs(i));
             if (s == null) {
                 s = new PrimSig(feature_prefix + Math.abs(i), feature_sig, Attr.ONE, Attr.PRIVATE);
@@ -160,8 +160,8 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
     private void resolveFunc(SafeList<Func> fs) {
         for (Func f : fs) {
-            context.push(f.color);
-            decls.put(f, f.color);
+            context.push(f.feats);
+            decls.put(f, f.feats);
             Expr nr = f.isPred ? null : f.returnDecl.accept(this);
             List<Decl> nds = new ArrayList<Decl>();
             for (Decl d : f.decls)
@@ -172,9 +172,9 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
         }
 
         for (Func f : fs) {
-            context.push(f.color);
+            context.push(f.feats);
             Expr e = f.getBody();
-            if (!f.isPred && !e.deNOP().color.isEmpty())
+            if (!f.isPred && !e.deNOP().feats.isEmpty())
                 throw new ErrorSyntax(f.pos, "Cannot mark function body: " + f);
             if (f.isPred)
                 e = ExprList.make(f.getBody().pos, f.getBody().pos, ExprList.Op.AND, Collections.singletonList(f.getBody()));
@@ -185,7 +185,7 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
     private void resolveMacro(SafeList<Macro> fs) {
         for (Macro f : fs) {
-            if (!f.color.isEmpty())
+            if (!f.feats.isEmpty())
                 throw new ErrorSyntax(f.pos, "Colored macros still not supported");
         }
     }
@@ -198,8 +198,8 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
 
     private void resolveSig(Sig s) {
-        context.push(s.color);
-        decls.put(s, s.color);
+        context.push(s.feats);
+        decls.put(s, s.feats);
 
         if (s.builtin) {
             oldsig2new.put(s, s);
@@ -209,7 +209,7 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
         Sig ns;
         Function<Expr,Expr> ef = null;
         if (s instanceof PrimSig) {
-            if (!s.color.containsAll(((PrimSig) s).parent.color))
+            if (!s.feats.containsAll(((PrimSig) s).parent.feats))
                 throw new ErrorSyntax(s.isSubsig, "Invalid colorful extension: " + s);
             if (oldsig2new.get(((PrimSig) s).parent) == null)
                 resolveSig(((PrimSig) s).parent);
@@ -223,15 +223,15 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
                     switch (a.type) {
                         case LONE :
                             atts.set(i, null);
-                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.color), se.lone(), se.no());
+                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.lone(), se.no());
                             break;
                         case ONE :
                             atts.set(i, null);
-                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.color), se.one(), se.no());
+                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.one(), se.no());
                             break;
                         case SOME :
                             atts.set(i, null);
-                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.color), se.some(), se.no());
+                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.some(), se.no());
                             break;
                         default :
                             ;
@@ -243,7 +243,7 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
         } else {
             Set<Sig> parents = new HashSet<Sig>();
             for (Sig ss : ((SubsetSig) s).parents) {
-                if (!s.color.containsAll(ss.color))
+                if (!s.feats.containsAll(ss.feats))
                     throw new ErrorSyntax(s.isSubset, "Invalid colorful extension: " + s);
 
                 if (oldsig2new.get(ss) == null)
@@ -259,15 +259,15 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
                     switch (a.type) {
                         case LONE :
                             atts.set(i, null);
-                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.color), se.lone(), se.no());
+                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.lone(), se.no());
                             break;
                         case ONE :
                             atts.set(i, null);
-                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.color), se.one(), se.no());
+                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.one(), se.no());
                             break;
                         case SOME :
                             atts.set(i, null);
-                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.color), se.some(), se.no());
+                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.some(), se.no());
                             break;
                         default :
                             ;
@@ -280,7 +280,7 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
         }
 
         if (ef == null)
-            ef = se -> ExprITE.make(s.pos, presenceCondition(s.color), ExprConstant.TRUE, se.no());
+            ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), ExprConstant.TRUE, se.no());
 
         extraFacts.add(ef.apply(ns));
         oldsig2new.put(s, ns);
@@ -290,23 +290,23 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
     private void resolveFields(Sig s) {
         Sig ns = oldsig2new.get(s);
-        context.push(s.color);
+        context.push(s.feats);
         for (Decl f : s.getFieldDecls()) {
-            context.push(f.color);
+            context.push(f.feats);
             List<String> vs = new ArrayList<String>();
             for (ExprHasName v : f.names) {
                 vs.add(v.label);
-                decls.put(v, f.color);
+                decls.put(v, f.feats);
             }
             Expr ne = f.expr.accept(this);
             Expr nt = f.expr.type().toExpr().accept(this);
             if (f.expr.type().arity() == 1)
                 nt = nt.setOf();
             String[] names = vs.toArray(new String[vs.size()]);
-            Field[] nf = ns.addTrickyField(f.names.get(0).pos, f.isPrivate, f.disjoint, f.disjoint2, ((Field) f.names.get(0)).isMeta, names, nt, f.color);
+            Field[] nf = ns.addTrickyField(f.names.get(0).pos, f.isPrivate, f.disjoint, f.disjoint2, ((Field) f.names.get(0)).isMeta, names, nt, f.feats);
             for (int i = 0; i < f.names.size(); i++) {
                 oldfield2new.put((Field) f.names.get(i), nf[i]);
-                extraFacts.add(ExprITE.make(f.names.get(i).pos, presenceCondition(f.color), ns.decl.get().join(nf[i]).in(ne).forAll(ns.decl), nf[i].no()));
+                extraFacts.add(ExprITE.make(f.names.get(i).pos, presenceCondition(f.feats), ns.decl.get().join(nf[i]).in(ne).forAll(ns.decl), nf[i].no()));
             }
             context.pop();
         }
@@ -322,40 +322,40 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
     @Override
     public Expr visit(ExprBinary x) throws Err {
-        context.push(x.color);
+        context.push(x.feats);
         Expr l = x.left.accept(this);
         Expr r = x.right.accept(this);
-        if (!x.left.color.isEmpty()) {
+        if (!x.left.feats.isEmpty()) {
             switch (x.op) {
                 case AND :
-                    l = ExprITE.make(x.left.pos, presenceCondition(x.left.color), l, ExprConstant.TRUE);
+                    l = ExprITE.make(x.left.pos, presenceCondition(x.left.feats), l, ExprConstant.TRUE);
                     break;
                 case OR :
-                    l = ExprITE.make(x.left.pos, presenceCondition(x.left.color), l, ExprConstant.FALSE);
+                    l = ExprITE.make(x.left.pos, presenceCondition(x.left.feats), l, ExprConstant.FALSE);
                     break;
                 case PLUS :
-                    l = ExprITE.make(x.left.pos, presenceCondition(x.left.color), l, Sig.NONE); // will fail: arity
+                    l = ExprITE.make(x.left.pos, presenceCondition(x.left.feats), l, Sig.NONE); // will fail: arity
                     break;
                 case INTERSECT :
-                    l = ExprITE.make(x.left.pos, presenceCondition(x.left.color), l, Sig.UNIV); // will fail: arity
+                    l = ExprITE.make(x.left.pos, presenceCondition(x.left.feats), l, Sig.UNIV); // will fail: arity
                     break;
                 default :
                     throw new ErrorSyntax("Cannot mark binary expression: " + x.op);
             }
         }
-        if (!x.right.color.isEmpty()) {
+        if (!x.right.feats.isEmpty()) {
             switch (x.op) {
                 case AND :
-                    r = ExprITE.make(x.right.pos, presenceCondition(x.right.color), r, ExprConstant.TRUE);
+                    r = ExprITE.make(x.right.pos, presenceCondition(x.right.feats), r, ExprConstant.TRUE);
                     break;
                 case OR :
-                    r = ExprITE.make(x.right.pos, presenceCondition(x.right.color), r, ExprConstant.FALSE);
+                    r = ExprITE.make(x.right.pos, presenceCondition(x.right.feats), r, ExprConstant.FALSE);
                     break;
                 case PLUS :
-                    r = ExprITE.make(x.right.pos, presenceCondition(x.right.color), r, Sig.NONE); // will fail: arity
+                    r = ExprITE.make(x.right.pos, presenceCondition(x.right.feats), r, Sig.NONE); // will fail: arity
                     break;
                 case INTERSECT :
-                    r = ExprITE.make(x.right.pos, presenceCondition(x.right.color), r, Sig.UNIV); // will fail: arity
+                    r = ExprITE.make(x.right.pos, presenceCondition(x.right.feats), r, Sig.UNIV); // will fail: arity
                     break;
                 default :
                     throw new ErrorSyntax("Cannot mark binary expression: " + x.op);
@@ -367,17 +367,17 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
     @Override
     public Expr visit(ExprList x) throws Err {
-        context.push(x.color);
+        context.push(x.feats);
         List<Expr> as = new ArrayList<Expr>();
         for (Expr a : x.args) {
             Expr e = a.accept(this);
-            if (!a.color.isEmpty())
+            if (!a.feats.isEmpty())
                 switch (x.op) {
                     case AND :
-                        as.add(ExprITE.make(a.pos, presenceCondition(a.color), e, ExprConstant.TRUE));
+                        as.add(ExprITE.make(a.pos, presenceCondition(a.feats), e, ExprConstant.TRUE));
                         break;
                     case OR :
-                        as.add(ExprITE.make(a.pos, presenceCondition(a.color), e, ExprConstant.FALSE));
+                        as.add(ExprITE.make(a.pos, presenceCondition(a.feats), e, ExprConstant.FALSE));
                         break;
                     default :
                         throw new ErrorSyntax("Cannot mark list expression: " + x.op);
@@ -391,7 +391,7 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
     @Override
     public Expr visit(ExprCall x) throws Err {
-        context.push(x.color);
+        context.push(x.feats);
         List<Expr> args = new ArrayList<Expr>();
         if (!computeContext().containsAll(decls.get(x.fun)))
             throw new ErrorSyntax(x.pos, "Invalid context for func call: " + x.fun);
@@ -408,10 +408,10 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
     @Override
     public Expr visit(ExprITE x) throws Err {
-        if (!x.cond.color.isEmpty() || !x.left.color.isEmpty() || !x.right.color.isEmpty())
+        if (!x.cond.feats.isEmpty() || !x.left.feats.isEmpty() || !x.right.feats.isEmpty())
             throw new ErrorSyntax("Cannot mark if-then-else expressions");
 
-        context.push(x.color);
+        context.push(x.feats);
         Expr c = x.cond.accept(this);
         Expr l = x.left.accept(this);
         Expr r = x.right.accept(this);
@@ -421,10 +421,10 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
     @Override
     public Expr visit(ExprLet x) throws Err {
-        if (!x.var.color.isEmpty() || !x.expr.color.isEmpty() || !x.sub.color.isEmpty())
+        if (!x.var.feats.isEmpty() || !x.expr.feats.isEmpty() || !x.sub.feats.isEmpty())
             throw new ErrorSyntax("Cannot mark let expressions");
 
-        context.push(x.color);
+        context.push(x.feats);
         ExprVar v = (ExprVar) x.var.accept(this);
         Expr e = x.expr.accept(this);
         Expr s = x.sub.accept(this);
@@ -434,13 +434,13 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
     @Override
     public Expr visit(ExprQt x) throws Err {
-        if (!x.sub.color.isEmpty())
+        if (!x.sub.feats.isEmpty())
             throw new ErrorSyntax("Cannot mark quantified expressions");
 
-        context.push(x.color);
+        context.push(x.feats);
         List<Decl> ds = new ArrayList<Decl>();
         for (Decl d : x.decls) {
-            if (!d.color.isEmpty())
+            if (!d.feats.isEmpty())
                 throw new ErrorSyntax("Cannot mark quantified declarations");
 
             Expr e = d.expr.accept(this);
@@ -463,9 +463,9 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
     @Override
     public Expr visit(ExprUnary x) throws Err {
-        if (!x.op.equals(ExprUnary.Op.NOOP) && !x.sub.color.isEmpty())
+        if (!x.op.equals(ExprUnary.Op.NOOP) && !x.sub.feats.isEmpty())
             throw new ErrorSyntax("Cannot mark unary expressions");
-        context.push(x.color);
+        context.push(x.feats);
         Expr s = x.sub.accept(this);
         context.pop();
         return x.op.make(x.pos, s);

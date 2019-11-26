@@ -38,7 +38,7 @@ public final class Decl {
      * The presence/absence annotations for this element.
      */
     // [HASLab]
-    public Set<Integer> color = new HashSet<Integer>();
+    public Set<Integer> feats = new HashSet<Integer>();
 
     /**
      * Paints this element with a presence/absence annotation.
@@ -47,9 +47,9 @@ public final class Decl {
      */
     // [HASLab]
     public void paint(int c) throws ErrorColor {
-        if (color.contains(-c))
+        if (feats.contains(-c))
             throw new ErrorSyntax(Pos.UNKNOWN, "Negative and positive of same feature: " + this);
-        color.add(c);
+        feats.add(c);
     }
 
     /**
@@ -60,7 +60,7 @@ public final class Decl {
     // [HASLab]
     public void paint(Collection<Integer> c) {
         // TODO: type check
-        color.addAll(c);
+        feats.addAll(c);
     }
 
     /**
@@ -116,7 +116,7 @@ public final class Decl {
      * This constructs a declaration; the list of names must not be empty.
      */
     // [HASLab] feature annotations
-    public Decl(Pos isPrivate, Pos disjoint, Pos disjoint2, List< ? extends ExprHasName> names, Expr expr, Set<Integer> color) {
+    public Decl(Pos isPrivate, Pos disjoint, Pos disjoint2, List< ? extends ExprHasName> names, Expr expr, Set<Integer> feats) {
         if (names.size() == 0)
             throw new NullPointerException();
         this.isPrivate = isPrivate;
@@ -124,7 +124,7 @@ public final class Decl {
         this.disjoint2 = disjoint2;
         this.names = ConstList.make(names);
         this.expr = expr;
-        this.color = color; // [HASLab] feature annotations
+        this.feats = feats; // [HASLab] feature annotations
     }
 
     /** Return the first variable in this declaration. */

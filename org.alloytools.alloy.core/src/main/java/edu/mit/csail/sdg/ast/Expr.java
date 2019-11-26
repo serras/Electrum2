@@ -124,7 +124,7 @@ public abstract class Expr extends Browsable {
      *            null if there are none)
      */
     // [HASLab] feature annotations
-    Expr(Pos pos, Pos closingBracket, boolean ambiguous, Type type, int mult, long weight, JoinableList<Err> errors, Set<Integer> color) {
+    Expr(Pos pos, Pos closingBracket, boolean ambiguous, Type type, int mult, long weight, JoinableList<Err> errors, Set<Integer> feats) {
         this.pos = (pos == null ? Pos.UNKNOWN : pos);
         this.closingBracket = (closingBracket == null ? Pos.UNKNOWN : closingBracket);
         this.ambiguous = ambiguous;
@@ -136,12 +136,12 @@ public abstract class Expr extends Browsable {
         this.type = (errors.size() > 0 || type == null) ? EMPTY : type;
         this.weight = (weight > 0) ? weight : 0;
         this.errors = errors;
-        this.color = color; // [HASLab] feature annotations
+        this.feats = feats; // [HASLab] feature annotations
     }
 
     /** This must only be called by Sig's constructor. */
     // [HASLab] feature annotations
-    Expr(Pos pos, Type type, Set<Integer> color) {
+    Expr(Pos pos, Type type, Set<Integer> feats) {
         this.closingBracket = Pos.UNKNOWN;
         this.ambiguous = false;
         this.errors = emptyListOfErrors;
@@ -149,7 +149,7 @@ public abstract class Expr extends Browsable {
         this.type = (type == null || type == EMPTY) ? Type.make((PrimSig) this) : type;
         this.mult = 0;
         this.weight = 0;
-        this.color = color; // [HASLab] feature annotations
+        this.feats = feats; // [HASLab] feature annotations
     }
 
     /** {@inheritDoc} */
@@ -331,7 +331,7 @@ public abstract class Expr extends Browsable {
     public final Expr deNOP() {
         Expr x = this;
         while (x instanceof ExprUnary && ((ExprUnary) x).op == ExprUnary.Op.NOOP) {
-            Set<Integer> cs = x.color;
+            Set<Integer> cs = x.feats;
             x = ((ExprUnary) x).sub;
             if (!(x instanceof ExprHasName)) // [HASLab] propagate annotations unless call since they are shared throught the AST
                 x.paint(cs);

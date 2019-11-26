@@ -452,7 +452,7 @@ public final class CompModule extends Browsable implements Module {
             TempList<Expr> temp = new TempList<Expr>(x.args.size());
             for (int i = 0; i < x.args.size(); i++)
                 temp.add(visitThis(x.args.get(i)));
-            return ExprList.make(x.pos, x.closingBracket, x.op, temp.makeConst(), x.color); // [HASLab] feature annotations
+            return ExprList.make(x.pos, x.closingBracket, x.op, temp.makeConst(), x.feats); // [HASLab] feature annotations
         }
 
         /** {@inheritDoc} */
@@ -461,7 +461,7 @@ public final class CompModule extends Browsable implements Module {
             Expr f = visitThis(x.cond);
             Expr a = visitThis(x.left);
             Expr b = visitThis(x.right);
-            return ExprITE.make(x.pos, f, a, b, x.color); // [HASLab] feature annotations
+            return ExprITE.make(x.pos, f, a, b, x.feats); // [HASLab] feature annotations
         }
 
         /** {@inheritDoc} */
@@ -478,7 +478,7 @@ public final class CompModule extends Browsable implements Module {
             // otherwise, process as regular join or as method call
             left = left.typecheck_as_set();
             if (!left.errors.isEmpty() || !(right instanceof ExprChoice))
-                return ExprBinary.Op.JOIN.make(x.pos, x.closingBracket, left, right, x.color); // [HASLab] feature annotations
+                return ExprBinary.Op.JOIN.make(x.pos, x.closingBracket, left, right, x.feats); // [HASLab] feature annotations
             return process(x.pos, x.closingBracket, right.pos, ((ExprChoice) right).choices, ((ExprChoice) right).reasons, left);
         }
 
@@ -500,7 +500,7 @@ public final class CompModule extends Browsable implements Module {
                     return x.op.make(x.pos, x.closingBracket, left, right);
                 return process(x.pos, x.closingBracket, right.pos, ((ExprChoice) right).choices, ((ExprChoice) right).reasons, left);
             }
-            return x.op.make(x.pos, x.closingBracket, left, right, x.color); // [HASLab] feature annotations
+            return x.op.make(x.pos, x.closingBracket, left, right, x.feats); // [HASLab] feature annotations
         }
 
         /** {@inheritDoc} */
@@ -512,7 +512,7 @@ public final class CompModule extends Browsable implements Module {
             put(left.label, left);
             Expr sub = visitThis(x.sub);
             remove(left.label);
-            return ExprLet.make(x.pos, left, right, sub, x.color); // [HASLab] feature annotations
+            return ExprLet.make(x.pos, left, right, sub, x.feats); // [HASLab] feature annotations
         }
 
         private boolean isOneOf(Expr x) {
@@ -591,8 +591,8 @@ public final class CompModule extends Browsable implements Module {
                 // typechecking when we see "all x:field$" or "some x:field$"
                 TempList<ExprVar> n = new TempList<ExprVar>(d.names.size());
                 for (ExprHasName v : d.names)
-                    n.add(ExprVar.make(v.pos, v.label, exp.type(), d.color)); // [HASLab] feature annotations 
-                Decl dd = new Decl(d.isPrivate, d.disjoint, d.disjoint2, n.makeConst(), exp, d.color); // [HASLab] feature annotations
+                    n.add(ExprVar.make(v.pos, v.label, exp.type(), d.feats)); // [HASLab] feature annotations 
+                Decl dd = new Decl(d.isPrivate, d.disjoint, d.disjoint2, n.makeConst(), exp, d.feats); // [HASLab] feature annotations
                 for (ExprHasName newname : dd.names)
                     put(newname.label, newname);
                 decls.add(dd);
@@ -605,14 +605,14 @@ public final class CompModule extends Browsable implements Module {
             for (Decl d : decls.makeConst())
                 for (ExprHasName v : d.names)
                     remove(v.label);
-            return x.op.make(x.pos, x.closingBracket, decls.makeConst(), sub, x.color); // [HASLab] feature annotations
+            return x.op.make(x.pos, x.closingBracket, decls.makeConst(), sub, x.feats); // [HASLab] feature annotations
         }
 
         /** {@inheritDoc} */
         @Override
         public Expr visit(ExprVar x) throws Err {
             Expr obj = resolve(x.pos, x.label);
-            obj.paint(x.color); // [HASLab] feature annotations
+            obj.paint(x.feats); // [HASLab] feature annotations
             if (obj instanceof Macro) {
                 Macro macro = ((Macro) obj).copy();
                 Expr instantiated = macro.instantiate(this, warns);
@@ -637,7 +637,7 @@ public final class CompModule extends Browsable implements Module {
         /** {@inheritDoc} */
         @Override
         public Expr visit(ExprUnary x) throws Err {
-            return x.op.make(x.pos, visitThis(x.sub), x.color); // [HASLab] feature annotations
+            return x.op.make(x.pos, visitThis(x.sub), x.feats); // [HASLab] feature annotations
         }
 
         /** {@inheritDoc} */
@@ -1506,7 +1506,7 @@ public final class CompModule extends Browsable implements Module {
                     throw new ErrorSyntax(n.pos, "The sig \"" + n.label + "\" cannot be found.");
                 parents.add(resolveSig(res, topo, parentAST));
             }
-            realSig = new SubsetSig(fullname, parents, oldS.color, oldS.attributes.toArray(new Attr[0])); // [HASLab] feature annotations
+            realSig = new SubsetSig(fullname, parents, oldS.feats, oldS.attributes.toArray(new Attr[0])); // [HASLab] feature annotations
         } else {
             Sig sup = ((PrimSig) oldS).parent;
             Sig parentAST = u.getRawSIG(sup.pos, sup.label);
@@ -1516,7 +1516,7 @@ public final class CompModule extends Browsable implements Module {
             if (!(parent instanceof PrimSig))
                 throw new ErrorSyntax(sup.pos, "Cannot extend the subset signature \"" + parent + "\".\n" + "A signature can only extend a toplevel signature or a subsignature.");
             PrimSig p = (PrimSig) parent;
-            realSig = new PrimSig(fullname, p, oldS.color, oldS.attributes.toArray(new Attr[0])); // [HASLab] feature annotations
+            realSig = new PrimSig(fullname, p, oldS.feats, oldS.attributes.toArray(new Attr[0])); // [HASLab] feature annotations
         }
         res.new2old.put(realSig, oldS);
         res.sig2module.put(realSig, u);
@@ -1640,7 +1640,7 @@ public final class CompModule extends Browsable implements Module {
                 if (err)
                     continue;
                 try {
-                    f = new Func(f.pos, f.isPrivate, fullname, tmpdecls.makeConst(), ret, f.getBody(), f.color); // [HASLab] feature annotations
+                    f = new Func(f.pos, f.isPrivate, fullname, tmpdecls.makeConst(), ret, f.getBody(), f.feats); // [HASLab] feature annotations
                     list.set(listi, f);
                     rep.typecheck("" + f + ", RETURN: " + f.returnDecl.type() + "\n");
                 } catch (Err ex) {
@@ -1913,7 +1913,7 @@ public final class CompModule extends Browsable implements Module {
 
             Expr expr = (Expr) (m.get(0));
             // [HASLab] tested here since asserts are not part of the AST
-            if (expr instanceof ExprUnary && !cmd.feats.feats.containsAll(((ExprUnary) expr).sub.color))
+            if (expr instanceof ExprUnary && !cmd.feats.feats.containsAll(((ExprUnary) expr).sub.feats))
                 throw new ErrorSyntax(cmd.pos, "Invalid context for assert call: " + cname);
             e = expr.not();
             e.paint(cmd.feats.feats); // [HASLab] apply command feature scope (must be over the negation)
@@ -1928,7 +1928,7 @@ public final class CompModule extends Browsable implements Module {
                 throw new ErrorSyntax(cmd.pos, "The predicate/function \"" + cname + "\" cannot be found.");
             Func f = (Func) (m.get(0));
             declaringClause = f;
-            if (!cmd.feats.feats.containsAll(f.color)) // [HASLab]
+            if (!cmd.feats.feats.containsAll(f.feats)) // [HASLab]
                 throw new ErrorSyntax(cmd.pos, "Invalid context for func call: " + f);
             e = f.getBody();
             if (!f.isPred)
@@ -2022,7 +2022,7 @@ public final class CompModule extends Browsable implements Module {
             String[] names = new String[d.names.size()];
             for (int i = 0; i < names.length; i++)
                 names[i] = d.names.get(i).label;
-            Field[] fields = s.addTrickyField(d.span(), d.isPrivate, d.disjoint, d.disjoint2, null, names, bound, d.color); // [HASLab] feature annotations
+            Field[] fields = s.addTrickyField(d.span(), d.isPrivate, d.disjoint, d.disjoint2, null, names, bound, d.feats); // [HASLab] feature annotations
             for (Field f : fields) {
                 rep.typecheck("Sig " + s + ", Field " + f.label + ": " + f.type() + "\n");
             }

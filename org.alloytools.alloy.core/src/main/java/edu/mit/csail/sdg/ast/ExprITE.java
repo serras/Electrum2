@@ -87,8 +87,8 @@ public final class ExprITE extends Expr {
 
     /** Constructs a ExprITE expression. */
     // [HASLab] feature annotations
-    private ExprITE(Pos pos, Expr cond, Expr left, Expr right, Type type, JoinableList<Err> errs, Set<Integer> color) {
-        super(pos, null, (cond.ambiguous || left.ambiguous || (right != null && right.ambiguous)), type, 0, cond.weight + left.weight + (right != null ? right.weight : 0), errs, color); // [HASLab] feature annotations
+    private ExprITE(Pos pos, Expr cond, Expr left, Expr right, Type type, JoinableList<Err> errs, Set<Integer> feats) {
+        super(pos, null, (cond.ambiguous || left.ambiguous || (right != null && right.ambiguous)), type, 0, cond.weight + left.weight + (right != null ? right.weight : 0), errs, feats); // [HASLab] feature annotations
         this.cond = cond;
         this.left = left;
         this.right = right;
@@ -129,7 +129,7 @@ public final class ExprITE extends Expr {
      * @param right - the else-clause
      */
     // [HASLab] feature annotations
-    public static Expr make(Pos pos, Expr cond, Expr left, Expr right, Set<Integer> color) {
+    public static Expr make(Pos pos, Expr cond, Expr left, Expr right, Set<Integer> feats) {
         JoinableList<Err> errs = emptyListOfErrors;
         if (cond.mult != 0)
             errs = errs.make(new ErrorSyntax(cond.span(), "Multiplicity expression not allowed here."));
@@ -164,7 +164,7 @@ public final class ExprITE extends Expr {
             break;
         }
         cond = cond.typecheck_as_formula();
-        return new ExprITE(pos, cond, left, right, c, errs.make(cond.errors).make(left.errors).make(right.errors), color); // [HASLab] feature annotations
+        return new ExprITE(pos, cond, left, right, c, errs.make(cond.errors).make(left.errors).make(right.errors), feats); // [HASLab] feature annotations
     }
 
     /** {@inheritDoc} */

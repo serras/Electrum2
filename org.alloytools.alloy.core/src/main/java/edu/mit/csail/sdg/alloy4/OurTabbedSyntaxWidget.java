@@ -474,7 +474,7 @@ public final class OurTabbedSyntaxWidget {
                 text = get();
                 c = text.getLineStartOffset(p.y - 1) + p.x - 1;
                 d = text.getLineStartOffset(p.y2 - 1) + p.x2 - 1;
-                text.shade(color, false, c, d + 1); // [HASLab] colorful annotations
+                text.shade(color, false, c, d + 1); // [HASLab] feature annotations
             }
         if (text != null) {
             text.moveCaret(0, 0);
