@@ -1874,8 +1874,10 @@ public final class CompModule extends Browsable implements Module {
         String n;
         if (check)
             n = addAssertion(pos, "check$" + (1 + commands.size()), e);
-        else
-            addFunc(e.span().merge(pos), Pos.UNKNOWN, n = "run$" + (1 + commands.size()), null, new ArrayList<Decl>(), null, e);
+        else {
+            Func f = addFunc(e.span().merge(pos), Pos.UNKNOWN, n = "run$" + (1 + commands.size()), null, new ArrayList<Decl>(), null, e);
+            f.paint(p.feats); // [HASLab] colorful conditions
+        }
         String labelName = (label == null || label.label.length() == 0) ? n : label.label;
         Command parent = followUp ? commands.get(commands.size() - 1) : null;
         Command newcommand = new Command(e.span().merge(pos), e, labelName, check, overall, bitwidth, seq, expects, scopes, p, null, ExprVar.make(null, n), parent); // [HASLab] colorful conditions
@@ -1908,9 +1910,13 @@ public final class CompModule extends Browsable implements Module {
             if (m.size() < 1)
                 throw new ErrorSyntax(cmd.pos, "The assertion \"" + cname + "\" cannot be found.");
 
-            ExprUnary expr = (ExprUnary) ((ExprUnary) (m.get(0))).sub; // [HASLab]
-            e = expr.sub.not(); // [HASLab]
-            e.paint(expr.color); // [HASLab]
+            Expr expr = (Expr) (m.get(0));
+            if (expr instanceof ExprUnary && !cmd.feats.feats.containsAll(((ExprUnary) expr).sub.color)) // [HASLab]
+                throw new ErrorSyntax(cmd.pos, "Invalid context for assert call: " + cname);
+            expr.paint(cmd.feats.feats); // [HASLab] apply command feature scope
+            if (!(expr.deNOP() instanceof ExprList)) // [HASLab] colorful, must identify as conjunction
+                expr = ExprList.make(expr.pos, expr.pos, ExprList.Op.AND, Collections.singletonList(expr.deNOP()));
+            e = expr.not();
         } else {
             List<Object> m = getRawQS(4, cname); // We prefer fun/pred in the
                                                 // topmost module
@@ -1922,11 +1928,14 @@ public final class CompModule extends Browsable implements Module {
                 throw new ErrorSyntax(cmd.pos, "The predicate/function \"" + cname + "\" cannot be found.");
             Func f = (Func) (m.get(0));
             declaringClause = f;
+            if (!cmd.feats.feats.containsAll(f.color)) // [HASLab]
+                throw new ErrorSyntax(cmd.pos, "Invalid context for func call: " + f);
             e = f.getBody();
             if (!f.isPred)
                 e = e.in(f.returnDecl);
             if (f.decls.size() > 0)
                 e = ExprQt.Op.SOME.make(null, null, f.decls, e);
+            e.paint(cmd.feats.feats); // [HASLab] apply command feature scope
         }
         if (e == null)
             e = ExprConstant.TRUE;

@@ -622,7 +622,7 @@ final class SimpleReporter extends A4Reporter {
                     // sometimes we might repeat the same solution infinitely
                     // number of times; this at least allows the user to keep
                     // going
-                    writeXML(null, mod.getAllFunc(), filename, sol, latestKodkodSRC); // [HASLab]
+                    writeXML(null, replacementFuncs != null ? replacementFuncs : mod.getAllFunc(), filename, sol, latestKodkodSRC); // [HASLab] colorful expansion
                     latestKodkod = sol;
                 }
                 cb("declare", filename);

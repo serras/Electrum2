@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import edu.mit.csail.sdg.alloy4.ConstList;
 import edu.mit.csail.sdg.alloy4.Err;
@@ -93,20 +92,56 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
         return new Pair<>(new_cmd, new Pair<>(all_sigs, all_funcs));
     }
 
-    private final Map<Object,Set<Integer>> decls;
-    private final Stack<Set<Integer>>      context;
-    private final Map<Sig,Sig>             oldsig2new;
-    private final Map<Field,Field>         oldfield2new;
-    private final Map<Func,Func>           oldfunc2new;
-    private final List<Expr>               extraFacts;
-    private final Map<Integer,Sig>         used_feats;
-    private final PrimSig                  feature_sig = new PrimSig("_Feature", Attr.ABSTRACT, Attr.PRIVATE);
-    private final SubsetSig                variant_sig = new SubsetSig("_Variant", Collections.singleton(feature_sig), Attr.PRIVATE);
+    private final Map<Object,Set<Integer>>     decls;
+    private final Stack<Set<Integer>>          context;
+    private final Map<Sig,Sig>                 oldsig2new;
+    private final Map<Field,Field>             oldfield2new;
+    private final Map<Func,Func>               oldfunc2new;
+    private final Map<ExprHasName,ExprHasName> oldvar2new;
+    private final List<Expr>                   extraFacts;
+    private final Map<Integer,Sig>             used_feats;
+    private final PrimSig                      feature_sig = new PrimSig("_Feature", Attr.ABSTRACT, Attr.PRIVATE);
+    private final SubsetSig                    variant_sig = new SubsetSig("_Variant", Collections.singleton(feature_sig), Attr.PRIVATE);
+
+    private TranslateColorfulToAlloy() {
+        this.decls = new HashMap<Object,Set<Integer>>();
+        this.context = new Stack<Set<Integer>>();
+        this.oldsig2new = new HashMap<Sig,Sig>();
+        this.oldfield2new = new HashMap<Field,Field>();
+        this.oldvar2new = new HashMap<ExprHasName,ExprHasName>();
+        this.oldfunc2new = new HashMap<Func,Func>();
+        this.extraFacts = new ArrayList<Expr>();
+        this.used_feats = new HashMap<Integer,Sig>();
+    }
+
+    /**
+     * Creates an expression representing the selected positive/negative marks. Will
+     * create and store feature sigs as needed.
+     *
+     * @param colors a set of presence/absence conditions
+     * @return the corresponding formula
+     */
+    private Expr presenceCondition(Collection<Integer> colors) {
+        List<Expr> args = new ArrayList<Expr>();
+        for (int i : colors) {
+            Sig s = used_feats.get(Math.abs(i));
+            if (s == null) {
+                s = new PrimSig("_F" + Math.abs(i), feature_sig, Attr.ONE, Attr.PRIVATE);
+                used_feats.put(Math.abs(i), s);
+            }
+            args.add(i < 0 ? s.in(variant_sig).not() : s.in(variant_sig));
+        }
+        return ExprList.make(Pos.UNKNOWN, Pos.UNKNOWN, ExprList.Op.AND, args);
+    }
 
     private void processFeatScope(FeatureScope feats) {
         Expr res;
-
-        extraFacts.add(presenceCondition(feats.feats));
+        Set<Integer> scp = new HashSet<Integer>(feats.feats);
+        if (feats.isExact)
+            for (int i = 1; i < 9; i++)
+                if (used_feats.containsKey(Math.abs(i)) && !scp.contains(Math.abs(i)))
+                    scp.add(-i);
+        extraFacts.add(presenceCondition(scp));
     }
 
     private Set<Integer> computeContext() {
@@ -120,30 +155,6 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
                 throw new ErrorSyntax("Invalid colorful context: " + x + " and " + (-x));
 
         return res;
-    }
-
-    private Expr presenceCondition(Collection<Integer> colors) {
-        List<Expr> args = colors.stream().map(i -> {
-            Sig s = used_feats.get(Math.abs(i));
-
-            if (s == null) {
-                s = new PrimSig("_F" + Math.abs(i), feature_sig, Attr.ONE, Attr.PRIVATE);
-                used_feats.put(i, s);
-            }
-
-            return i < 0 ? s.in(variant_sig).not() : s.in(variant_sig);
-        }).collect(Collectors.toList());
-        return ExprList.make(Pos.UNKNOWN, Pos.UNKNOWN, ExprList.Op.AND, args);
-    }
-
-    private TranslateColorfulToAlloy() {
-        this.decls = new HashMap<Object,Set<Integer>>();
-        this.context = new Stack<Set<Integer>>();
-        this.oldsig2new = new HashMap<Sig,Sig>();
-        this.oldfield2new = new HashMap<Field,Field>();
-        this.oldfunc2new = new HashMap<Func,Func>();
-        this.extraFacts = new ArrayList<Expr>();
-        this.used_feats = new HashMap<Integer,Sig>();
     }
 
     private void resolveFunc(SafeList<Func> fs) {
@@ -161,9 +172,12 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
         for (Func f : fs) {
             context.push(f.color);
-            if (!f.isPred && !f.getBody().deNOP().color.isEmpty())
+            Expr e = f.getBody();
+            if (!f.isPred && !e.deNOP().color.isEmpty())
                 throw new ErrorSyntax(f.pos, "Cannot mark function body: " + f);
-            oldfunc2new.get(f).setBody(f.getBody().accept(this));
+            if (f.isPred)
+                e = ExprList.make(f.getBody().pos, f.getBody().pos, ExprList.Op.AND, Collections.singletonList(f.getBody()));
+            oldfunc2new.get(f).setBody(e.accept(this));
             context.pop();
         }
     }
@@ -177,8 +191,7 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
     private void resolveAssert(ConstList<Pair<String,Expr>> as) {
         for (Pair<String,Expr> a : as) {
-            if (!((ExprUnary) a.b).sub.color.isEmpty())
-                throw new ErrorSyntax(a.b.pos, "Colored macros still not supported");
+            a.b.accept(this);
         }
     }
 
@@ -193,15 +206,17 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
         }
 
         Sig ns;
-        Function<Expr,Expr> ef = se -> ExprConstant.TRUE;
+        Function<Expr,Expr> ef = null;
         if (s instanceof PrimSig) {
+            if (!s.color.containsAll(((PrimSig) s).parent.color))
+                throw new ErrorSyntax(s.isSubsig, "Invalid colorful extension: " + s);
             if (oldsig2new.get(((PrimSig) s).parent) == null)
                 resolveSig(((PrimSig) s).parent);
             PrimSig parent = (PrimSig) oldsig2new.get(((PrimSig) s).parent);
 
             List<Attr> atts = new ArrayList<Attr>();
             atts.addAll(s.attributes);
-            for (int i = 0; i < s.attributes.size(); i++) {
+            for (int i = 0; i < s.attributes.size() && ef == null; i++) {
                 Attr a = s.attributes.get(i);
                 if (a != null) {
                     switch (a.type) {
@@ -218,7 +233,6 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
                             ef = se -> ExprITE.make(s.pos, presenceCondition(s.color), se.some(), se.no());
                             break;
                         default :
-                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.color), ExprConstant.TRUE, se.no());
                             ;
                     }
                 }
@@ -228,6 +242,9 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
         } else {
             Set<Sig> parents = new HashSet<Sig>();
             for (Sig ss : ((SubsetSig) s).parents) {
+                if (!s.color.containsAll(ss.color))
+                    throw new ErrorSyntax(s.isSubset, "Invalid colorful extension: " + s);
+
                 if (oldsig2new.get(ss) == null)
                     resolveSig(ss);
                 parents.add(oldsig2new.get(ss));
@@ -235,7 +252,7 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
             List<Attr> atts = new ArrayList<Attr>();
             atts.addAll(s.attributes);
-            for (int i = 0; i < s.attributes.size(); i++) {
+            for (int i = 0; i < s.attributes.size() && ef == null; i++) {
                 Attr a = s.attributes.get(i);
                 if (a != null) {
                     switch (a.type) {
@@ -252,17 +269,21 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
                             ef = se -> ExprITE.make(s.pos, presenceCondition(s.color), se.some(), se.no());
                             break;
                         default :
-                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.color), ExprConstant.TRUE, se.no());
                             ;
                     }
                 }
+
             }
 
             ns = new SubsetSig(s.label, parents, atts.toArray(new Attr[atts.size()]));
         }
 
+        if (ef == null)
+            ef = se -> ExprITE.make(s.pos, presenceCondition(s.color), ExprConstant.TRUE, se.no());
+
         extraFacts.add(ef.apply(ns));
         oldsig2new.put(s, ns);
+        oldvar2new.put(s.decl.get(), ns.decl.get());
         context.pop();
     }
 
@@ -290,7 +311,9 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
         }
 
         for (Expr f : s.getFacts()) {
+            decls.put(s.decl.get(), Collections.EMPTY_SET);
             ns.addFact(f.accept(this));
+            decls.remove(s.decl.get());
         }
 
         context.pop();
@@ -439,6 +462,8 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
     @Override
     public Expr visit(ExprUnary x) throws Err {
+        if (!x.op.equals(ExprUnary.Op.NOOP) && !x.sub.color.isEmpty())
+            throw new ErrorSyntax("Cannot mark unary expressions");
         context.push(x.color);
         Expr s = x.sub.accept(this);
         context.pop();
@@ -449,7 +474,10 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
     public Expr visit(ExprVar x) throws Err {
         if (!computeContext().containsAll(decls.get(x)))
             throw new ErrorSyntax("Invalid context for var call: " + x);
-        return x;
+        if (oldvar2new.containsKey(x))
+            return oldvar2new.get(x);
+        else
+            return x;
     }
 
     @Override

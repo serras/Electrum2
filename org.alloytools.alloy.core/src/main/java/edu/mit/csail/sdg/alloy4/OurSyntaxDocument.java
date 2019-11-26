@@ -586,10 +586,10 @@ class OurSyntaxDocument extends DefaultStyledDocument {
                     i = i + 2;
                     mode = new ArrayList<Mode>(Arrays.asList(Mode.ALLOY)); // [HASLab]
                 }
-                setCharacterAttributes(oldi, i - oldi, style, true); // [HASLab] colorful, must force update for strikes
+                setCharacterAttributes(oldi, i - oldi, style, false); // [HASLab] colorful, must force update for strikes
             } else if ((c == '/' || c == '-') && i < n - 1 && txt.charAt(i + 1) == c) {
                 i = txt.indexOf('\n', i);
-                setCharacterAttributes(oldi, i < 0 ? (n - oldi) : (i - oldi), styleComment, true); // [HASLab] colorful, must force update for strikes
+                setCharacterAttributes(oldi, i < 0 ? (n - oldi) : (i - oldi), styleComment, false); // [HASLab] colorful, must force update for strikes
                 break;
             } else if (c == '\"') {
                 for (i++; i < n; i++) {
@@ -602,7 +602,7 @@ class OurSyntaxDocument extends DefaultStyledDocument {
                     if (txt.charAt(i) == '\\' && i + 1 < n && txt.charAt(i + 1) != '\n')
                         i++;
                 }
-                setCharacterAttributes(oldi, i - oldi, styleString(mode), true); // [HASLab] colorful, must force update for strikes
+                setCharacterAttributes(oldi, i - oldi, styleString(mode), false); // [HASLab] colorful, must force update for strikes
             } else if ((isNegativeColor(c) || isPositiveColor(c))) { // [HASLab] colorful, check for delimiters and change style mode
                 i++;
                 boolean opens = true;
@@ -616,7 +616,7 @@ class OurSyntaxDocument extends DefaultStyledDocument {
                 }
                 for (int k = 0; k < 9; k++) // paint the delimiters
                     if (c == (char) (O1 + k) || c == (char) (E1 + k))
-                        setCharacterAttributes(oldi, i - oldi, styleColorMark(mode, OurSyntaxWidget.C[k]), true);
+                        setCharacterAttributes(oldi, i - oldi, styleColorMark(mode, OurSyntaxWidget.C[k]), false);
                 // if not in style, apply
                 if (opens && isPositiveColor(c) && !mode.contains(Mode.valueOf("PFEAT" + (c - O1 + 1))) && !mode.contains(Mode.FEATURESCOPE)) {
                     mode.add(Mode.valueOf("PFEAT" + (c - O1 + 1)));
@@ -626,7 +626,7 @@ class OurSyntaxDocument extends DefaultStyledDocument {
             } else if (do_iden(c)) {
                 for (i++; i < n && do_iden(txt.charAt(i)); i++) {}
                 AttributeSet style = (c >= '0' && c <= '9') ? styleNumber(mode) : (do_keyword(txt, oldi, i - oldi) ? styleKeyword(mode) : styleNormal(mode)); // [HASLab]
-                setCharacterAttributes(oldi, i - oldi, style, true); // [HASLab] colorful Alloy, must force update for strikes
+                setCharacterAttributes(oldi, i - oldi, style, false); // [HASLab] colorful Alloy, must force update for strikes
                 if (do_keyword(txt, oldi, i - oldi)) { // [HASLab]
                     if (txt.charAt(oldi) == 'w')
                         mode.add(Mode.FEATURESCOPE);
@@ -635,7 +635,7 @@ class OurSyntaxDocument extends DefaultStyledDocument {
                 }
             } else {
                 for (i++; i < n && !do_iden(txt.charAt(i)) && txt.charAt(i) != '\n' && txt.charAt(i) != '-' && txt.charAt(i) != '/' && !isPositiveColor(txt.charAt(i)) && !isNegativeColor(txt.charAt(i)); i++) {}  // [HASLab] colorful, do not ignore color marks
-                setCharacterAttributes(oldi, i - oldi, styleSymbol(mode), true); // [HASLab] colorful, must force update for strikes
+                setCharacterAttributes(oldi, i - oldi, styleSymbol(mode), false); // [HASLab] colorful, must force update for strikes
             }
         }
         mode.remove(Mode.FEATURESCOPE); // [HASLab]

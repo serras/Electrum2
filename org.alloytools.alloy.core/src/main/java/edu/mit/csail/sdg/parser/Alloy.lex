@@ -231,7 +231,7 @@ import java_cup.runtime.*;
 "\u2786"           	  { return alloy_sym(yytext(), CompSym.PFEAT7      );} // [HASLab] colorful marks
 "\u2787"           	  { return alloy_sym(yytext(), CompSym.PFEAT8      );} // [HASLab] colorful marks
 "\u2788"           	  { return alloy_sym(yytext(), CompSym.PFEAT9      );} // [HASLab] colorful marks
-"\uD83C\uDD0B"    	  { return alloy_sym(yytext(), CompSym.PFEAT0      );} // [HASLab] colorful marks
+"\u24ea"        	  { return alloy_sym(yytext(), CompSym.PFEAT0      );} // [HASLab] colorful marks
 "\u278A"          	  { return alloy_sym(yytext(), CompSym.NFEAT1      );} // [HASLab] colorful marks
 "\u278B"          	  { return alloy_sym(yytext(), CompSym.NFEAT2      );} // [HASLab] colorful marks
 "\u278C"          	  { return alloy_sym(yytext(), CompSym.NFEAT3      );} // [HASLab] colorful marks

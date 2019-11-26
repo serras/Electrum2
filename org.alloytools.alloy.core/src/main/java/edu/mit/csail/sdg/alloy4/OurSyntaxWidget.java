@@ -247,9 +247,9 @@ public final class OurSyntaxWidget {
 
             public void actionPerformed(ActionEvent e) {
                 try {
-                    pane.getDocument().insertString(pane.getSelectionStart(), "" + ("\uD83C\uDD0B"), null);
+                    pane.getDocument().insertString(pane.getSelectionStart(), "" + ("\u24ea"), null);
                     if (pane.getSelectionStart() != pane.getSelectionEnd())
-                        pane.getDocument().insertString(pane.getSelectionEnd(), "" + ("\uD83C\uDD0B"), null);
+                        pane.getDocument().insertString(pane.getSelectionEnd(), "" + ("\u24ea"), null);
                     pane.setSelectionEnd(pane.getSelectionEnd() - 1);
                 } catch (BadLocationException e1) {
                     // TODO Auto-generated catch block
@@ -970,6 +970,6 @@ public final class OurSyntaxWidget {
     /** The colors of each of the features. */
     // [HASLab] colorful Alloy
     public static Color C[] = {
-                               new Color(255, 225, 205), new Color(255, 205, 225), new Color(205, 255, 225), new Color(225, 255, 205), new Color(225, 205, 255), new Color(205, 225, 255), new Color(225, 255, 225), new Color(225, 225, 255), new Color(255, 225, 225)
+                               new Color(255, 225, 205), new Color(255, 205, 225), new Color(205, 255, 225), new Color(225, 205, 255), new Color(225, 255, 205), new Color(205, 225, 255), new Color(225, 255, 225), new Color(225, 225, 255), new Color(255, 225, 225)
     };
 }

@@ -330,8 +330,12 @@ public abstract class Expr extends Browsable {
     /** Remove the "NOP" in front of an expression (if any). */
     public final Expr deNOP() {
         Expr x = this;
-        while (x instanceof ExprUnary && ((ExprUnary) x).op == ExprUnary.Op.NOOP)
+        while (x instanceof ExprUnary && ((ExprUnary) x).op == ExprUnary.Op.NOOP) {
+            Set<Integer> cs = x.color;
             x = ((ExprUnary) x).sub;
+            if (!(x instanceof ExprHasName)) // [HASLab] propagate colors unless call
+                x.paint(cs);
+        }
         return x;
     }
 

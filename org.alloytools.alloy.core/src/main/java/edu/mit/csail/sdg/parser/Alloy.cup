@@ -249,7 +249,7 @@ parser code {:
     ch.put(CompSym.NFEAT7,"\u2790" );	    // [HASLab] colorful marks
     ch.put(CompSym.NFEAT8,"\u2791" );	    // [HASLab] colorful marks
 	ch.put(CompSym.NFEAT9,"\u2792" );	    // [HASLab] colorful marks
-	ch.put(CompSym.PFEAT0,"\uD83C\uDD0B" ); // [HASLab] colorful marks
+	ch.put(CompSym.PFEAT0,"\u24ea" ); // [HASLab] colorful marks
 	TreeSet<String> list = new TreeSet<String>();
     Pos p=Pos.UNKNOWN;
     if (x!=null && x.value instanceof Pos) p=(Pos)(x.value);
