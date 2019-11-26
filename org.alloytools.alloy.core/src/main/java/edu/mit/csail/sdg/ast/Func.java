@@ -45,7 +45,7 @@ import edu.mit.csail.sdg.alloy4.Util;
  * <b>Invariant:</b> the return type declaration does not contain a
  * predicate/function call
  *
- * @modified Nuno Macedo, Chong Liu // [HASLab] electrum-colorful
+ * @modified Nuno Macedo, Chong Liu // [HASLab] electrum-features
  */
 
 public final class Func extends Browsable implements Clause {
@@ -142,7 +142,7 @@ public final class Func extends Browsable implements Clause {
      *             predicate/function call
      */
     public Func(Pos pos, String label, List<Decl> decls, Expr returnDecl, Expr body) throws Err {
-        this(pos, null, label, decls, returnDecl, body, new HashSet<Integer>()); // [HASLab] colorful conditions
+        this(pos, null, label, decls, returnDecl, body, new HashSet<Integer>()); // [HASLab] feature annotations
     }
 
     /**
@@ -175,9 +175,8 @@ public final class Func extends Browsable implements Clause {
      * @throws ErrorSyntax if this function's return type declaration contains a
      *             predicate/function call
      */
-    // [HASLab] colorful conditions
     public Func(Pos pos, Pos isPrivate, String label, List<Decl> decls, Expr returnDecl, Expr body) throws Err {
-        this(pos, isPrivate, label, decls, returnDecl, body, new HashSet<Integer>()); // [HASLab] colorful conditions
+        this(pos, isPrivate, label, decls, returnDecl, body, new HashSet<Integer>()); // [HASLab] feature annotations
     }
 
     /**
@@ -210,7 +209,7 @@ public final class Func extends Browsable implements Clause {
      * @throws ErrorSyntax if this function's return type declaration contains a
      *             predicate/function call
      */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     public Func(Pos pos, Pos isPrivate, String label, List<Decl> decls, Expr returnDecl, Expr body, Set<Integer> color) throws Err {
         if (pos == null)
             pos = Pos.UNKNOWN;
@@ -218,7 +217,7 @@ public final class Func extends Browsable implements Clause {
         this.isPrivate = isPrivate;
         this.label = (label == null ? "" : label);
         this.isPred = (returnDecl == null);
-        this.color = color; // [HASLab] colorful conditions
+        this.color = color; // [HASLab] feature annotations
         if (returnDecl == null)
             returnDecl = ExprConstant.FALSE;
         if (returnDecl.mult == 0 && returnDecl.type.arity() == 1)

@@ -43,7 +43,7 @@ import edu.mit.csail.sdg.ast.Attr.AttrType;
 /**
  * Mutable; represents a signature.
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public abstract class Sig extends Expr implements Clause {
@@ -155,7 +155,6 @@ public abstract class Sig extends Expr implements Clause {
     /**
      * Store the list of attributes.
      */
-    // [HASLab] colorful, removed final
     public final ConstList<Attr> attributes;
 
     /**
@@ -252,7 +251,7 @@ public abstract class Sig extends Expr implements Clause {
 
     /** Constructs a new builtin PrimSig. */
     private Sig(String label) {
-        super(Pos.UNKNOWN, null, new HashSet<Integer>()); // [HASLab] colorful conditions
+        super(Pos.UNKNOWN, null, new HashSet<Integer>()); // [HASLab] feature annotations
         Expr oneof = ExprUnary.Op.ONEOF.make(null, this);
         ExprVar v = ExprVar.make(null, "this", oneof.type);
         this.decl = new Decl(null, null, null, Util.asList(v), oneof);
@@ -271,15 +270,14 @@ public abstract class Sig extends Expr implements Clause {
     }
 
     /** Constructs a new PrimSig or SubsetSig. */
-    // [HASLab] colorful conditions
     private Sig(Type type, String label, Attr... attributes) throws Err {
-        this(type, label, new HashSet<Integer>(), attributes);
+        this(type, label, new HashSet<Integer>(), attributes); // [HASLab] feature annotations
     }
 
     /** Constructs a new PrimSig or SubsetSig. */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     private Sig(Type type, String label, Set<Integer> color, Attr... attributes) throws Err {
-        super(AttrType.WHERE.find(attributes), type, color); // [HASLab] colorful conditions
+        super(AttrType.WHERE.find(attributes), type, color); // [HASLab] feature annotations
         this.attributes = Util.asList(attributes);
         Expr oneof = ExprUnary.Op.ONEOF.make(null, this);
         ExprVar v = ExprVar.make(null, "this", oneof.type);
@@ -490,9 +488,8 @@ public abstract class Sig extends Expr implements Clause {
          * @throws ErrorType if you attempt to extend the builtin sigs NONE, SIGINT,
          *             SEQIDX, or STRING
          */
-        // [HASLab] colorful conditions
         public PrimSig(String label, PrimSig parent, Attr... attributes) throws Err {
-            this(label, parent, new HashSet<Integer>(), attributes);
+            this(label, parent, new HashSet<Integer>(), attributes); // [HASLab] feature annotations
         }
 
         /**
@@ -506,9 +503,9 @@ public abstract class Sig extends Expr implements Clause {
          * @throws ErrorType if you attempt to extend the builtin sigs NONE, SIGINT,
          *             SEQIDX, or STRING
          */
-        // [HASLab] colorful conditions
+        // [HASLab] feature annotations
         public PrimSig(String label, PrimSig parent, Set<Integer> color, Attr... attributes) throws Err {
-            super(((parent != null && parent.isEnum != null) ? parent.type : null), label, color, Util.append(attributes, Attr.SUBSIG)); // [HASLab] colorful conditions
+            super(((parent != null && parent.isEnum != null) ? parent.type : null), label, color, Util.append(attributes, Attr.SUBSIG)); // [HASLab] feature annotations
             if (parent == SIGINT)
                 throw new ErrorSyntax(pos, "sig " + label + " cannot extend the builtin \"Int\" signature");
             if (parent == SEQIDX)
@@ -641,9 +638,8 @@ public abstract class Sig extends Expr implements Clause {
          * @throws ErrorSyntax if the signature has two or more multiplicities
          * @throws ErrorType if parents only contains NONE
          */
-        // [HASLab] colorful conditions
         public SubsetSig(String label, Collection<Sig> parents, Attr... attributes) throws Err {
-            this(label, parents, new HashSet<Integer>(), attributes);
+            this(label, parents, new HashSet<Integer>(), attributes); // [HASLab] feature annotations
         }
 
         /**
@@ -657,9 +653,9 @@ public abstract class Sig extends Expr implements Clause {
          * @throws ErrorSyntax if the signature has two or more multiplicities
          * @throws ErrorType if parents only contains NONE
          */
-        // [HASLab] colorful conditions
+        // [HASLab] feature annotations
         public SubsetSig(String label, Collection<Sig> parents, Set<Integer> color, Attr... attributes) throws Err {
-            super(getType(label, parents), label, color, Util.append(attributes, Attr.SUBSET)); // [HASLab] colorful conditions
+            super(getType(label, parents), label, color, Util.append(attributes, Attr.SUBSET)); // [HASLab] feature annotations
 
             if (isEnum != null)
                 throw new ErrorType(pos, "Subset signature cannot be an enum.");
@@ -716,8 +712,7 @@ public abstract class Sig extends Expr implements Clause {
     public static final class Field extends ExprHasName implements Clause {
 
         /** The sig that this field belongs to; never null. */
-        // [HASLab] colorful, removed final
-        public Sig           sig;
+        public final Sig     sig;
 
         /** Nonnull if the user wanted this field to be private. */
         public final Pos     isPrivate;
@@ -737,9 +732,9 @@ public abstract class Sig extends Expr implements Clause {
         }
 
         /** Constructs a new Field object. */
-        // [HASLab] colorful conditions
+        // [HASLab] feature annotations
         private Field(Pos pos, Pos isPrivate, Pos isMeta, Pos disjoint, Pos disjoint2, Sig sig, String label, Expr bound, Set<Integer> color) throws Err {
-            super(pos, label, sig.type.product(bound.type), color); // [HASLab] colorful conditions
+            super(pos, label, sig.type.product(bound.type), color); // [HASLab] feature annotations
             this.defined = bound.mult() == ExprUnary.Op.EXACTLYOF;
             if (sig.builtin)
                 throw new ErrorSyntax(pos, "Builtin sig \"" + sig + "\" cannot have fields.");
@@ -875,8 +870,8 @@ public abstract class Sig extends Expr implements Clause {
                                                          // multiplicity
                                                          // symbol, we assume
                                                          // it's oneOf
-        final Field f = new Field(null, null, null, null, null, this, label, bound, new HashSet<Integer>()); // [HASLab] colorful conditions
-        final Decl d = new Decl(null, null, null, Arrays.asList(f), bound, new HashSet<Integer>()); // [HASLab] colorful conditions
+        final Field f = new Field(null, null, null, null, null, this, label, bound, new HashSet<Integer>()); // [HASLab] feature annotations
+        final Decl d = new Decl(null, null, null, Arrays.asList(f), bound, new HashSet<Integer>()); // [HASLab] feature annotations
         f.decl = d;
         fields.add(d);
         realFields.add(f);
@@ -904,7 +899,7 @@ public abstract class Sig extends Expr implements Clause {
      * @throws ErrorType if the bound is not fully typechecked or is not a
      *             set/relation
      */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     public final Field[] addTrickyField(Pos pos, Pos isPrivate, Pos isDisjoint, Pos isDisjoint2, Pos isMeta, String[] labels, Expr bound, Set<Integer> color) throws Err {
         bound = bound.typecheck_as_set();
         if (bound.ambiguous)
@@ -915,10 +910,10 @@ public abstract class Sig extends Expr implements Clause {
                                                          // symbol, we assume
                                                          // it's oneOf
         final Field[] f = new Field[labels.length];
-        color.addAll(this.color); // [HASLab] parent presence required
+        color.addAll(this.color); // [HASLab] fields inherit parent presence conditions
         for (int i = 0; i < f.length; i++)
-            f[i] = new Field(pos, isPrivate, isMeta, isDisjoint, isDisjoint2, this, labels[i], bound, color); // [HASLab] colorful conditions
-        final Decl d = new Decl(isPrivate, isDisjoint, isDisjoint2, Arrays.asList(f), bound, color); // [HASLab] colorful conditions
+            f[i] = new Field(pos, isPrivate, isMeta, isDisjoint, isDisjoint2, this, labels[i], bound, color); // [HASLab] feature annotations
+        final Decl d = new Decl(isPrivate, isDisjoint, isDisjoint2, Arrays.asList(f), bound, color); // [HASLab] feature annotations
         for (int i = 0; i < f.length; i++) {
             f[i].decl = d;
             realFields.add(f[i]);
@@ -956,8 +951,8 @@ public abstract class Sig extends Expr implements Clause {
             bound = bound.resolve_as_set(null);
         if (bound.mult() != ExprUnary.Op.EXACTLYOF)
             bound = ExprUnary.Op.EXACTLYOF.make(null, bound);
-        final Field f = new Field(pos, isPrivate, isMeta, null, null, this, label, bound, new HashSet<Integer>()); // [HASLab] colorful conditions
-        final Decl d = new Decl(null, null, null, Arrays.asList(f), bound, new HashSet<Integer>()); // [HASLab] colorful conditions
+        final Field f = new Field(pos, isPrivate, isMeta, null, null, this, label, bound, new HashSet<Integer>()); // [HASLab] feature annotations
+        final Decl d = new Decl(null, null, null, Arrays.asList(f), bound, new HashSet<Integer>()); // [HASLab] feature annotations
         f.decl = d;
         fields.add(d);
         realFields.add(f);

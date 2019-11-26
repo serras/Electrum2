@@ -39,7 +39,7 @@ import edu.mit.csail.sdg.alloy4.Pos;
  * <p>
  * <b>Invariant:</b> type!=EMPTY => (all x:args | x.mult==0)
  *
- * @modified Nuno Macedo, Chong Liu // [HASLab] electrum-colorful
+ * @modified Nuno Macedo, Chong Liu // [HASLab] electrum-features
  */
 
 public final class ExprList extends Expr {
@@ -113,9 +113,9 @@ public final class ExprList extends Expr {
     // ============================================================================================================//
 
     /** Constructs an ExprList node. */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     private ExprList(Pos pos, Pos closingBracket, Op op, boolean ambiguous, ConstList<Expr> args, long weight, JoinableList<Err> errs, Set<Integer> color) {
-        super(pos, closingBracket, ambiguous, Type.FORMULA, 0, weight, errs, color); // [HASLab] colorful conditions
+        super(pos, closingBracket, ambiguous, Type.FORMULA, 0, weight, errs, color); // [HASLab] feature annotations
         this.op = op;
         this.args = args;
     }
@@ -131,7 +131,7 @@ public final class ExprList extends Expr {
         if (x.isSame(ExprConstant.TRUE))
             return;
         if (x instanceof ExprBinary && ((ExprBinary) x).op == ExprBinary.Op.AND) {
-            // [HASLab] this destroys x, so colors must be propagated
+            // [HASLab] this destroys x, so feature annotations must be propagated
             ((ExprBinary) x).left.paint(x.color);
             ((ExprBinary) x).right.paint(x.color);
             addAND(list, ((ExprBinary) x).left);
@@ -140,13 +140,13 @@ public final class ExprList extends Expr {
         }
         if (x instanceof ExprList && ((ExprList) x).op == ExprList.Op.AND) {
             for (Expr y : ((ExprList) x).args) {
-                // [HASLab] this destroys x, so colors must be propagated
+                // [HASLab] this destroys x, so feature annotations must be propagated
                 y.paint(x.color);
                 addAND(list, y);
             }
             return;
         }
-        list.add(x); // [HASLab] colorful, denop'ed for consistency
+        list.add(x); // [HASLab] colorful, denop'ed for consistency (TODO: still needed?)
     }
 
     /**
@@ -158,7 +158,7 @@ public final class ExprList extends Expr {
         if (x.isSame(ExprConstant.FALSE))
             return;
         if (x instanceof ExprBinary && ((ExprBinary) x).op == ExprBinary.Op.OR) {
-            // [HASLab] this destroys x, so colors must be propagated
+            // [HASLab] this destroys x, so feature annotations must be propagated
             ((ExprBinary) x).left.paint(x.color);
             ((ExprBinary) x).right.paint(x.color);
             addOR(list, ((ExprBinary) x).left);
@@ -167,7 +167,7 @@ public final class ExprList extends Expr {
         }
         if (x instanceof ExprList && ((ExprList) x).op == ExprList.Op.OR) {
             for (Expr y : ((ExprList) x).args) {
-                // [HASLab] this destroys x, so colors must be propagated
+                // [HASLab] this destroys x, so feature annotations must be propagated
                 y.paint(x.color);
                 addOR(list, y);
             }
@@ -177,13 +177,12 @@ public final class ExprList extends Expr {
     }
 
     /** Generates a call to a builtin predicate */
-    // [HASLab] colorful conditions
     public static ExprList make(Pos pos, Pos closingBracket, Op op, List< ? extends Expr> args) {
-        return make(pos, closingBracket, op, args, new HashSet<Integer>());
+        return make(pos, closingBracket, op, args, new HashSet<Integer>()); // [HASLab] feature annotations
     }
 
     /** Generates a call to a builtin predicate */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     public static ExprList make(Pos pos, Pos closingBracket, Op op, List< ? extends Expr> args, Set<Integer> color) {
         boolean ambiguous = false;
         JoinableList<Err> errs = emptyListOfErrors;
@@ -227,7 +226,7 @@ public final class ExprList extends Expr {
             if (commonArity == EMPTY)
                 errs = errs.make(new ErrorType(pos, "The builtin predicate disjoint[] cannot be used among expressions of different arities."));
         }
-        return new ExprList(pos, closingBracket, op, ambiguous, newargs.makeConst(), weight, errs, color); // [HASLab] colorful conditions
+        return new ExprList(pos, closingBracket, op, ambiguous, newargs.makeConst(), weight, errs, color); // [HASLab] feature annotations
     }
 
     /** Generates the expression (arg1 and arg2) */
@@ -309,7 +308,7 @@ public final class ExprList extends Expr {
             changed = (a != args.get(0) || b != args.get(1) || c != args.get(2));
             newargs.add(a).add(b).add(c);
         }
-        return changed ? make(pos, closingBracket, op, newargs.makeConst(), color) : this; // [HASLab] colorful conditions
+        return changed ? make(pos, closingBracket, op, newargs.makeConst(), color) : this; // [HASLab] feature annotations
     }
 
     // ============================================================================================================//

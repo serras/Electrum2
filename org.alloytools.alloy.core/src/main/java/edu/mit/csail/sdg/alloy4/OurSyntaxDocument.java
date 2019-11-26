@@ -44,7 +44,7 @@ import javax.swing.text.TabStop;
  * <p>
  * <b>Thread Safety:</b> Can be called only by the AWT event thread
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 class OurSyntaxDocument extends DefaultStyledDocument {

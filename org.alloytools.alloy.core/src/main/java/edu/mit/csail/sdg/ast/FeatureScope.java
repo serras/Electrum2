@@ -27,7 +27,7 @@ import edu.mit.csail.sdg.alloy4.Pos;
  * <b>Invariant:</b> -9 >= feats <= -1 || 1 >= feats <= 9
  * <p>
  *
- * @author Nuno Macedo // [HASLab] electrum-colorful
+ * @author Nuno Macedo // [HASLab] electrum-features
  */
 public class FeatureScope {
 

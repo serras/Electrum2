@@ -66,7 +66,7 @@ import edu.mit.csail.sdg.translator.TranslateColorfulToAlloy;
 /**
  * This helper method is used by SimpleGUI.
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 final class SimpleReporter extends A4Reporter {
@@ -393,7 +393,7 @@ final class SimpleReporter extends A4Reporter {
             try {
                 cb("R3", "   Writing the XML file...");
                 if (latestModule != null)
-                    writeXML(this, replacementFuncs != null ? replacementFuncs : latestModule.getAllFunc(), filename, sol, latestKodkodSRC); // [HASLab] colorful expansion
+                    writeXML(this, replacementFuncs != null ? replacementFuncs : latestModule.getAllFunc(), filename, sol, latestKodkodSRC); // [HASLab] alternative skolems
             } catch (Throwable ex) {
                 cb("bold", "\n" + (ex.toString().trim()) + "\nStackTrace:\n" + (MailBug.dump(ex).trim()) + "\n");
                 return;
@@ -526,7 +526,10 @@ final class SimpleReporter extends A4Reporter {
      */
     private static Module                  latestModule       = null;
 
-    // [HASLab]
+    /**
+     * A set of functions to be skolemized rather than those of <latestModule>.
+     */
+    // [HASLab] needed for the expansion of variability models
     private static Iterable<Func>          replacementFuncs   = null;
 
     /**
@@ -554,7 +557,7 @@ final class SimpleReporter extends A4Reporter {
     }
 
     /** Helper method to write out a full XML file. */
-    // [HASLab] pass funcs rather than module, allows replacing by color expansion
+    // [HASLab] pass funcs rather than module, allows replacing by alternative funcs
     private static void writeXML(A4Reporter rep, Iterable<Func> funcs, String filename, A4Solution sol, Map<String,String> sources) throws Exception {
         sol.writeXML(rep, filename, funcs, sources); // [HASLab]
         if (AlloyCore.isDebug())
@@ -622,7 +625,7 @@ final class SimpleReporter extends A4Reporter {
                     // sometimes we might repeat the same solution infinitely
                     // number of times; this at least allows the user to keep
                     // going
-                    writeXML(null, replacementFuncs != null ? replacementFuncs : mod.getAllFunc(), filename, sol, latestKodkodSRC); // [HASLab] colorful expansion
+                    writeXML(null, replacementFuncs != null ? replacementFuncs : mod.getAllFunc(), filename, sol, latestKodkodSRC); // [HASLab] alternative skolems
                     latestKodkod = sol;
                 }
                 cb("declare", filename);
@@ -690,14 +693,12 @@ final class SimpleReporter extends A4Reporter {
                         }
                         final String tempXML = tempdir + File.separatorChar + i + ".cnf.xml";
                         final String tempCNF = tempdir + File.separatorChar + i + ".cnf";
-                        Command cmd = cmds.get(i); // [HASLab] colorful expansion, removed final
+                        Command cmd = cmds.get(i); // [HASLab] removed final for variability expansion
                         rep.tempfile = tempCNF;
                         cb(out, "bold", "Executing \"" + cmd + "\"\n");
-                        Pair<Command,Pair<Collection<Sig>,Iterable<Func>>> exp_color = TranslateColorfulToAlloy.expandColors(world, cmd); // [HASLab] colorful expansion
-                        cmd = exp_color.a;
-                        System.out.println(cmd.formula);
-                        replacementFuncs = exp_color.b.b;
-                        A4Solution ai = TranslateAlloyToKodkod.execute_commandFromBook(rep, exp_color.b.a, cmd, options);
+                        Pair<Command,Pair<Collection<Sig>,Iterable<Func>>> exp_color = TranslateColorfulToAlloy.expandColors(world, cmd); // [HASLab] variability expansion
+                        replacementFuncs = exp_color.b.b; // expanded skolems
+                        A4Solution ai = TranslateAlloyToKodkod.execute_commandFromBook(rep, exp_color.b.a, exp_color.a, options);
                         if (ai == null)
                             result.add(null);
                         else if (ai.satisfiable())

@@ -17,7 +17,7 @@
 package edu.mit.csail.sdg.alloy4;
 
 /**
- * @author Nuno Macedo // [HASLab] electrum-colorful
+ * @author Nuno Macedo // [HASLab] electrum-features
  */
 
 public class ErrorColor extends Err {

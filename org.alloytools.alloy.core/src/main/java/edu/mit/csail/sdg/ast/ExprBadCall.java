@@ -35,7 +35,7 @@ import edu.mit.csail.sdg.alloy4.Pos;
  * <p>
  * <b>Invariant:</b> this.type==EMPTY && this.errors.size()>0
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class ExprBadCall extends Expr {
@@ -92,7 +92,7 @@ public final class ExprBadCall extends Expr {
 
     /** Constructs an ExprBadCall object. */
     private ExprBadCall(Pos pos, Pos closingBracket, boolean ambiguous, Func fun, ConstList<Expr> args, JoinableList<Err> errors, long extraWeight, long weight) {
-        super(pos, closingBracket, ambiguous, EMPTY, 0, weight, errors, new HashSet<Integer>()); // [HASLab] colorful conditions
+        super(pos, closingBracket, ambiguous, EMPTY, 0, weight, errors, new HashSet<Integer>()); // [HASLab] feature annotations
         this.fun = fun;
         this.args = args;
         this.extraWeight = extraWeight;

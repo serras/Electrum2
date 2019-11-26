@@ -31,7 +31,7 @@ import edu.mit.csail.sdg.alloy4.Pos;
  * <p>
  * <b>Invariant:</b> this.type==EMPTY && this.errors.size()==1
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public abstract class ExprCustom extends Expr {
@@ -48,9 +48,9 @@ public abstract class ExprCustom extends Expr {
      * @param pos - the Pos for this expression (can be Pos.UNKNOWN if unknown)
      * @param error - the error to display if this node does not get desugared
      */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     public ExprCustom(Pos pos, Err error, Set<Integer> color) {
-        super(pos, null, false, EMPTY, 0, 0, new JoinableList<Err>(error), color); // [HASLab] colorful conditions
+        super(pos, null, false, EMPTY, 0, 0, new JoinableList<Err>(error), color); // [HASLab] feature annotations
         if (error == null)
             throw new NullPointerException();
     }

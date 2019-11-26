@@ -52,8 +52,8 @@ import edu.mit.csail.sdg.ast.Type.ProductType;
  * <p>
  * <b>Invariant:</b> type!=EMPTY => (right.mult==2 => (this.op==IN || this.op is
  * one of the 17 arrow operators))
- * 
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class ExprBinary extends Expr {
@@ -73,9 +73,9 @@ public final class ExprBinary extends Expr {
     // ============================================================================================================//
 
     /** Constructs a new ExprBinary node. */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     private ExprBinary(Pos pos, Pos closingBracket, Op op, Expr left, Expr right, Type type, JoinableList<Err> errors, Set<Integer> color) {
-        super(pos, closingBracket, left.ambiguous || right.ambiguous, type, (op.isArrow && (left.mult == 2 || right.mult == 2 || op != Op.ARROW)) ? 2 : 0, left.weight + right.weight, errors, color); // [HASLab] colorful conditions
+        super(pos, closingBracket, left.ambiguous || right.ambiguous, type, (op.isArrow && (left.mult == 2 || right.mult == 2 || op != Op.ARROW)) ? 2 : 0, left.weight + right.weight, errors, color); // [HASLab] feature annotations
         this.op = op;
         this.left = left;
         this.right = right;
@@ -293,9 +293,8 @@ public final class ExprBinary extends Expr {
          * @param left - the left hand side expression
          * @param right - the right hand side expression
          */
-        // [HASLab] colorful conditions
         public final Expr make(Pos pos, Pos closingBracket, Expr left, Expr right) {
-            return make(pos, closingBracket, left, right, new HashSet<Integer>());
+            return make(pos, closingBracket, left, right, new HashSet<Integer>()); // [HASLab] feature annotations
         }
 
         /**
@@ -306,7 +305,7 @@ public final class ExprBinary extends Expr {
          * @param left - the left hand side expression
          * @param right - the right hand side expression
          */
-        // [HASLab] colorful conditions
+        // [HASLab] feature annotations
         public final Expr make(Pos pos, Pos closingBracket, Expr left, Expr right, Set<Integer> color) {
             switch (this) {
                 case AND :
@@ -462,7 +461,7 @@ public final class ExprBinary extends Expr {
                 errs = errs.make(new ErrorSyntax(left.span(), "Multiplicity expression not allowed here."));
             if ((isArrow && right.mult == 1) || (!isArrow && this != Op.IN && right.mult != 0))
                 errs = errs.make(new ErrorSyntax(right.span(), "Multiplicity expression not allowed here."));
-            return new ExprBinary(pos, closingBracket, this, left, right, type, errs.make(e), color); // [HASLab] colorful conditions
+            return new ExprBinary(pos, closingBracket, this, left, right, type, errs.make(e), color); // [HASLab] feature annotations
         }
 
         /** Returns the human readable label for this operator. */
@@ -733,7 +732,7 @@ public final class ExprBinary extends Expr {
         Expr right = this.right.resolve(b, warns);
         if (w != null)
             warns.add(w);
-        return (left == this.left && right == this.right) ? this : op.make(pos, closingBracket, left, right, color); // [HASLab] colorful conditions
+        return (left == this.left && right == this.right) ? this : op.make(pos, closingBracket, left, right, color); // [HASLab] feature annotations
     }
 
     // ============================================================================================================//

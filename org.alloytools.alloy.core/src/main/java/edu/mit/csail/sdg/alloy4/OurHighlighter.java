@@ -30,7 +30,7 @@ import javax.swing.text.JTextComponent;
  * <p>
  * <b>Thread Safety:</b> Can be called only by the AWT event thread.
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class OurHighlighter implements Highlighter.HighlightPainter {

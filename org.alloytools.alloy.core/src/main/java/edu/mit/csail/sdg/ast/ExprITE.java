@@ -37,7 +37,7 @@ import edu.mit.csail.sdg.alloy4.Util;
  * <b>Invariant:</b> type!=EMPTY => (cond.mult==0 && left.mult==0 &&
  * right.mult==0)
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class ExprITE extends Expr {
@@ -86,9 +86,9 @@ public final class ExprITE extends Expr {
     }
 
     /** Constructs a ExprITE expression. */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     private ExprITE(Pos pos, Expr cond, Expr left, Expr right, Type type, JoinableList<Err> errs, Set<Integer> color) {
-        super(pos, null, (cond.ambiguous || left.ambiguous || (right != null && right.ambiguous)), type, 0, cond.weight + left.weight + (right != null ? right.weight : 0), errs, color); // [HASLab] colorful conditions
+        super(pos, null, (cond.ambiguous || left.ambiguous || (right != null && right.ambiguous)), type, 0, cond.weight + left.weight + (right != null ? right.weight : 0), errs, color); // [HASLab] feature annotations
         this.cond = cond;
         this.left = left;
         this.right = right;
@@ -117,9 +117,8 @@ public final class ExprITE extends Expr {
      * @param left - the then-clause
      * @param right - the else-clause
      */
-    // [HASLab] colorful conditions
     public static Expr make(Pos pos, Expr cond, Expr left, Expr right) {
-        return make(pos, cond, left, right, new HashSet<Integer>()); // [HASLab] colorful conditions
+        return make(pos, cond, left, right, new HashSet<Integer>()); // [HASLab] feature annotations
     }
 
     /**
@@ -129,7 +128,7 @@ public final class ExprITE extends Expr {
      * @param left - the then-clause
      * @param right - the else-clause
      */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     public static Expr make(Pos pos, Expr cond, Expr left, Expr right, Set<Integer> color) {
         JoinableList<Err> errs = emptyListOfErrors;
         if (cond.mult != 0)
@@ -165,7 +164,7 @@ public final class ExprITE extends Expr {
             break;
         }
         cond = cond.typecheck_as_formula();
-        return new ExprITE(pos, cond, left, right, c, errs.make(cond.errors).make(left.errors).make(right.errors), color); // [HASLab] colorful conditions
+        return new ExprITE(pos, cond, left, right, c, errs.make(cond.errors).make(left.errors).make(right.errors), color); // [HASLab] feature annotations
     }
 
     /** {@inheritDoc} */

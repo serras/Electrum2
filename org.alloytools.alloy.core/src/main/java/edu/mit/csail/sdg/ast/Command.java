@@ -41,7 +41,7 @@ import edu.mit.csail.sdg.alloy4.Util;
  * <p>
  * <b>Invariant:</b> maxstring >= -1
  *
- * @modified Nuno Macedo, Chong Liu // [HASLab] electrum-colorful
+ * @modified Nuno Macedo, Chong Liu // [HASLab] electrum-features
  */
 
 public final class Command extends Browsable {
@@ -100,7 +100,7 @@ public final class Command extends Browsable {
 
 
     /** The feature scopes. */
-    // [HASLab] colorful scopes
+    // [HASLab]
     public final FeatureScope            feats;
 
     /**
@@ -125,7 +125,7 @@ public final class Command extends Browsable {
         boolean first = true;
         StringBuilder sb = new StringBuilder(check ? "Check " : "Run ").append(label);
 
-        sb.append(" with " + feats); // [HASLab] colorful scopes
+        sb.append(" with " + feats); // [HASLab] feature scopes
 
         if (overall >= 0 && (bitwidth >= 0 || maxseq >= 0 || scope.size() > 0))
             sb.append(" for ").append(overall).append(" but");
@@ -163,7 +163,7 @@ public final class Command extends Browsable {
      * @param formula - the formula that must be satisfied by this command
      */
     public Command(boolean check, int overall, int bitwidth, int maxseq, Expr formula) throws ErrorSyntax {
-        this(null, null, "", check, overall, bitwidth, maxseq, -1, null, null, null, formula, null); // [HASLab] colorful scopes
+        this(null, null, "", check, overall, bitwidth, maxseq, -1, null, null, null, formula, null); // [HASLab] feature scopes
     }
 
     /**
@@ -186,7 +186,7 @@ public final class Command extends Browsable {
      *            exact though we may or may not know what the scope is yet
      * @param formula - the formula that must be satisfied by this command
      */
-    // [HASLab] colorful scopes
+    // [HASLab] feature scopes
     public Command(Pos pos, Expr e, String label, boolean check, int overall, int bitwidth, int maxseq, int expects, Iterable<CommandScope> scope, FeatureScope feats, Iterable<Sig> additionalExactSig, Expr formula, Command parent) {
         if (pos == null)
             pos = Pos.UNKNOWN;
@@ -201,7 +201,7 @@ public final class Command extends Browsable {
         this.maxstring = (-1);
         this.expects = (expects < 0 ? -1 : (expects > 0 ? 1 : 0));
         this.scope = ConstList.make(scope);
-        this.feats = feats; // [HASLab] colorful scopes
+        this.feats = feats;  // [HASLab] feature scopes
         this.additionalExactScopes = ConstList.make(additionalExactSig);
         this.parent = parent;
     }
@@ -211,7 +211,7 @@ public final class Command extends Browsable {
      * except with a different formula.
      */
     public Command change(Expr newFormula) {
-        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, expects, scope, feats, additionalExactScopes, newFormula, parent); // [HASLab] colorful scopes
+        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, expects, scope, feats, additionalExactScopes, newFormula, parent); // [HASLab] feature scopes
     }
 
     /**
@@ -219,7 +219,7 @@ public final class Command extends Browsable {
      * except with a different scope.
      */
     public Command change(ConstList<CommandScope> scope) {
-        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, expects, scope, feats, additionalExactScopes, formula, parent); // [HASLab] colorful scopes
+        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, expects, scope, feats, additionalExactScopes, formula, parent); // [HASLab] feature scopes
     }
 
     /**
@@ -227,7 +227,7 @@ public final class Command extends Browsable {
      * except with a different list of "additional exact sigs".
      */
     public Command change(Sig... additionalExactScopes) {
-        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, expects, scope, feats, Util.asList(additionalExactScopes), formula, parent); // [HASLab] colorful scopes
+        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, expects, scope, feats, Util.asList(additionalExactScopes), formula, parent); // [HASLab] feature scopes
     }
 
     /**

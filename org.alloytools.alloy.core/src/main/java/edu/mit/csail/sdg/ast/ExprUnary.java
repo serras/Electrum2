@@ -42,7 +42,7 @@ import edu.mit.csail.sdg.ast.Type.ProductType;
  * <p>
  * <b>Invariant:</b> type!=EMPTY => sub.mult==0
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class ExprUnary extends Expr {
@@ -121,9 +121,9 @@ public final class ExprUnary extends Expr {
     // ============================================================================================================//
 
     /** Constructs an unary expression. */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     private ExprUnary(Pos pos, Op op, Expr sub, Type type, long weight, JoinableList<Err> errors, Set<Integer> color) {
-        super(pos, null, sub.ambiguous, type, (op == Op.EXACTLYOF || op == Op.SOMEOF || op == Op.LONEOF || op == Op.ONEOF || op == Op.SETOF) ? 1 : 0, weight, errors, color); // [HASLab] colorful conditions
+        super(pos, null, sub.ambiguous, type, (op == Op.EXACTLYOF || op == Op.SOMEOF || op == Op.LONEOF || op == Op.ONEOF || op == Op.SETOF) ? 1 : 0, weight, errors, color); // [HASLab] feature annotations
         this.op = op;
         this.sub = sub;
     }
@@ -214,7 +214,7 @@ public final class ExprUnary extends Expr {
          *            ExprUnary's constructor never sees it)
          */
         public final Expr make(Pos pos, Expr sub) {
-            return make(pos, sub, null, 0, new HashSet<Integer>()); // [HASLab] colorful conditions
+            return make(pos, sub, null, 0, new HashSet<Integer>()); // [HASLab] feature annotations
         }
 
         /**
@@ -233,9 +233,9 @@ public final class ExprUnary extends Expr {
          *            (This desugaring is done by the ExprUnary.Op.make() method, so
          *            ExprUnary's constructor never sees it)
          */
-        // [HASLab] colorful conditions
+        // [HASLab] feature annotations
         public final Expr make(Pos pos, Expr sub, Set<Integer> color) {
-            return make(pos, sub, null, 0, color); // [HASLab] colorful conditions
+            return make(pos, sub, null, 0, color); // [HASLab] feature annotations
         }
 
         /**
@@ -257,7 +257,7 @@ public final class ExprUnary extends Expr {
          *            ExprUnary's constructor never sees it)
          */
         public final Expr make(Pos pos, Expr sub, Err extraError, long extraWeight) {
-            return make(pos, sub, extraError, extraWeight, new HashSet<Integer>()); // [HASLab] colorful conditions
+            return make(pos, sub, extraError, extraWeight, new HashSet<Integer>()); // [HASLab] feature annotations
         }
 
         /**
@@ -278,7 +278,7 @@ public final class ExprUnary extends Expr {
          *            (This desugaring is done by the ExprUnary.Op.make() method, so
          *            ExprUnary's constructor never sees it)
          */
-        // [HASLab] colorful conditions
+        // [HASLab] feature annotations
         public final Expr make(Pos pos, Expr sub, Err extraError, long extraWeight, Set<Integer> color) {
             if (pos == null || pos == Pos.UNKNOWN) {
                 if (this == NOOP)
@@ -375,7 +375,7 @@ public final class ExprUnary extends Expr {
                         type = SIGINT.type;
                         break;
                 }
-            return new ExprUnary(pos, this, sub, type, extraWeight + sub.weight, errors.make(extraError), color); // [HASLab] colorful conditions
+            return new ExprUnary(pos, this, sub, type, extraWeight + sub.weight, errors.make(extraError), color); // [HASLab] feature annotations
         }
 
         /** Returns the human readable label for this operator */

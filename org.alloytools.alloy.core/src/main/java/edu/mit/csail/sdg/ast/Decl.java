@@ -29,20 +29,19 @@ import edu.mit.csail.sdg.alloy4.Pos;
 /**
  * Immutable; this declaration binds a list of names to an expression.
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class Decl {
 
     /**
-     * The presence/absence conditions for this browsable element.
+     * The presence/absence annotations for this element.
      */
     // [HASLab]
     public Set<Integer> color = new HashSet<Integer>();
 
     /**
-     * Paints this browsable element with a (positive or negative) presence
-     * condition.
+     * Paints this element with a presence/absence annotation.
      *
      * @param c
      */
@@ -54,8 +53,7 @@ public final class Decl {
     }
 
     /**
-     * Paints this browsable element with a set of (positive or negative) presence
-     * condition.
+     * Paints this element with a set of presence/absence annotations.
      *
      * @param c
      */
@@ -110,15 +108,14 @@ public final class Decl {
     /**
      * This constructs a declaration; the list of names must not be empty.
      */
-    // [HASLab] colorful conditions
     public Decl(Pos isPrivate, Pos disjoint, Pos disjoint2, List< ? extends ExprHasName> names, Expr expr) {
-        this(isPrivate, disjoint, disjoint2, names, expr, new HashSet<Integer>()); // [HASLab] colorful conditions
+        this(isPrivate, disjoint, disjoint2, names, expr, new HashSet<Integer>()); // [HASLab] feature annotations
     }
 
     /**
      * This constructs a declaration; the list of names must not be empty.
      */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     public Decl(Pos isPrivate, Pos disjoint, Pos disjoint2, List< ? extends ExprHasName> names, Expr expr, Set<Integer> color) {
         if (names.size() == 0)
             throw new NullPointerException();
@@ -127,7 +124,7 @@ public final class Decl {
         this.disjoint2 = disjoint2;
         this.names = ConstList.make(names);
         this.expr = expr;
-        this.color = color; // [HASLab] colorful conditions
+        this.color = color; // [HASLab] feature annotations
     }
 
     /** Return the first variable in this declaration. */

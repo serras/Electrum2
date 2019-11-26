@@ -43,7 +43,7 @@ import edu.mit.csail.sdg.ast.Sig.PrimSig;
  * <b>Invariant:</b> mult==0 || mult==1 || mult==2 <br>
  * <b>Invariant:</b> weight>0
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public abstract class Expr extends Browsable {
@@ -123,7 +123,7 @@ public abstract class Expr extends Browsable {
      * @param errors - the list of errors associated with this Expr node (can be
      *            null if there are none)
      */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     Expr(Pos pos, Pos closingBracket, boolean ambiguous, Type type, int mult, long weight, JoinableList<Err> errors, Set<Integer> color) {
         this.pos = (pos == null ? Pos.UNKNOWN : pos);
         this.closingBracket = (closingBracket == null ? Pos.UNKNOWN : closingBracket);
@@ -136,11 +136,11 @@ public abstract class Expr extends Browsable {
         this.type = (errors.size() > 0 || type == null) ? EMPTY : type;
         this.weight = (weight > 0) ? weight : 0;
         this.errors = errors;
-        this.color = color;
+        this.color = color; // [HASLab] feature annotations
     }
 
     /** This must only be called by Sig's constructor. */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     Expr(Pos pos, Type type, Set<Integer> color) {
         this.closingBracket = Pos.UNKNOWN;
         this.ambiguous = false;
@@ -149,7 +149,7 @@ public abstract class Expr extends Browsable {
         this.type = (type == null || type == EMPTY) ? Type.make((PrimSig) this) : type;
         this.mult = 0;
         this.weight = 0;
-        this.color = color;
+        this.color = color; // [HASLab] feature annotations
     }
 
     /** {@inheritDoc} */
@@ -333,7 +333,7 @@ public abstract class Expr extends Browsable {
         while (x instanceof ExprUnary && ((ExprUnary) x).op == ExprUnary.Op.NOOP) {
             Set<Integer> cs = x.color;
             x = ((ExprUnary) x).sub;
-            if (!(x instanceof ExprHasName)) // [HASLab] propagate colors unless call
+            if (!(x instanceof ExprHasName)) // [HASLab] propagate annotations unless call since they are shared throught the AST
                 x.paint(cs);
         }
         return x;

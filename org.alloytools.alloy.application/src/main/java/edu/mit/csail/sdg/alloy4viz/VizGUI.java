@@ -77,13 +77,14 @@ import edu.mit.csail.sdg.alloy4.Runner;
 import edu.mit.csail.sdg.alloy4.Util;
 import edu.mit.csail.sdg.alloy4.Version;
 import edu.mit.csail.sdg.alloy4graph.GraphViewer;
+import edu.mit.csail.sdg.translator.TranslateColorfulToAlloy;
 
 /**
  * GUI main window for the visualizer.
  * <p>
  * <b>Thread Safety:</b> Can be called only by the AWT event thread.
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class VizGUI implements ComponentListener {
@@ -644,7 +645,7 @@ public final class VizGUI implements ComponentListener {
             toolbar.add(saveAsSettingsButton = OurUtil.button("Save As", "Save the current theme customization as a new theme file", "images/24_save.gif", doSaveThemeAs()));
             toolbar.add(resetSettingsButton = OurUtil.button("Reset", "Reset the theme customization", "images/24_settings_close2.gif", doResetTheme()));
 
-            // [HASLab] add selected product
+            // [HASLab] add a panel depicted the selected product
             JPanel product = new JPanel() {
 
                 private static final long serialVersionUID = 1L;
@@ -655,8 +656,8 @@ public final class VizGUI implements ComponentListener {
 
                     AlloyModel model = getVizState().getCurrentModel();
                     AlloyInstance inst = getVizState().getOriginalInstance();
-                    AlloyType feats = model.hasType("_Feature");
-                    AlloySet prod = model.hasSet("_Variant", feats);
+                    AlloyType feats = model.hasType(TranslateColorfulToAlloy.feature_sig.label);
+                    AlloySet variant = model.hasSet(TranslateColorfulToAlloy.variant_sig.label, feats);
 
                     Graphics2D g2 = (Graphics2D) g;
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -665,15 +666,17 @@ public final class VizGUI implements ComponentListener {
                     int offsety = toolbar.getHeight() / 2;
                     int offsetx = 90;
                     int dist = 35;
+                    // identify all features existing in the model (present in the variant or not)
                     int lmx = inst.type2atoms(feats).size();
                     Ellipse2D loop = null, last = null;
                     for (int i = 0; i < lmx; i++) {
                         AlloyAtom atm = inst.type2atoms(feats).get(i);
-                        int feat = Integer.valueOf(atm.toString().substring("_F".length()));
+                        int feat = Integer.valueOf(atm.toString().substring(TranslateColorfulToAlloy.feature_prefix.length()));
                         g2.setStroke(new BasicStroke(3));
                         Ellipse2D circl = new Ellipse2D.Double(i * dist + offsetx - radius, offsety - radius, 2.0 * radius, 2.0 * radius);
                         Color tmp = g2.getColor();
-                        if (inst.set2atoms(prod).contains(atm)) {
+                        // if in current variant, white fill
+                        if (inst.set2atoms(variant).contains(atm)) {
                             g2.setColor(new Color(255, 255, 255));
                         } else {
                             g2.setColor(new Color(120, 120, 120));

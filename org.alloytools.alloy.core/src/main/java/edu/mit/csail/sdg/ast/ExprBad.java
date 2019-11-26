@@ -33,7 +33,7 @@ import edu.mit.csail.sdg.alloy4.Pos;
  * <p>
  * <b>Invariant:</b> this.type==EMPTY && this.errors.size()==1
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class ExprBad extends Expr {
@@ -62,7 +62,7 @@ public final class ExprBad extends Expr {
 
     /** Constructs an ExprBad object. */
     public ExprBad(Pos pos, String originalText, Err error) {
-        super(pos, null, false, EMPTY, 0, 0, new JoinableList<Err>(error), new HashSet<Integer>()); // [HASLab] colorful conditions
+        super(pos, null, false, EMPTY, 0, 0, new JoinableList<Err>(error), new HashSet<Integer>()); // [HASLab] feature annotations
         this.originalText = originalText;
     }
 

@@ -37,7 +37,7 @@ import edu.mit.csail.sdg.parser.CompModule.Context;
 /**
  * Immutable; this class represents a macro.
  *
- * @modified Nuno Macedo // [HASLab] electrum-base, electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-base, electrum-features
  */
 // [HASLab] visibility
 public final class Macro extends ExprCustom {
@@ -65,7 +65,7 @@ public final class Macro extends ExprCustom {
 
     /** Construct a new Macro object. */
     private Macro(Pos pos, Pos isPrivate, CompModule realModule, String name, List<ExprVar> params, List<Expr> args, Expr body) {
-        super(pos, new ErrorFatal(pos, "Incomplete call on the macro \"" + name + "\""), new HashSet<Integer>()); // [HASLab] colorful conditions
+        super(pos, new ErrorFatal(pos, "Incomplete call on the macro \"" + name + "\""), new HashSet<Integer>()); // [HASLab] feature annotations
         this.realModule = realModule;
         this.isPrivate = isPrivate;
         this.name = name;

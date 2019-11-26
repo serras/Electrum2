@@ -65,7 +65,7 @@ import edu.mit.csail.sdg.parser.CompUtil;
  * <p>
  * <b>Thread Safety:</b> Can be called only by the AWT event thread
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class OurSyntaxWidget {

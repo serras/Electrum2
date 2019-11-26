@@ -32,7 +32,7 @@ import edu.mit.csail.sdg.alloy4.TableView;
  * <p>
  * <b>Invariant:</b> type!=EMPTY => (type==expr.type && !expr.ambiguous)
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class ExprVar extends ExprHasName implements Clause {
@@ -51,9 +51,9 @@ public final class ExprVar extends ExprHasName implements Clause {
     }
 
     /** Constructs an ExprVar object */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     private ExprVar(Pos pos, String label, Type type, Set<Integer> color) {
-        super(pos, label, type, color); // [HASLab] colorful conditions
+        super(pos, label, type, color); // [HASLab] feature annotations
     }
 
     /**
@@ -65,7 +65,7 @@ public final class ExprVar extends ExprHasName implements Clause {
      *            pretty-printing and does not have to be unique)
      */
     public static ExprVar make(Pos pos, String label) {
-        return new ExprVar(pos, label, Type.EMPTY, new HashSet<Integer>()); // [HASLab] colorful conditions
+        return new ExprVar(pos, label, Type.EMPTY, new HashSet<Integer>()); // [HASLab] feature annotations
     }
 
     /**
@@ -78,7 +78,7 @@ public final class ExprVar extends ExprHasName implements Clause {
      * @param type - the type
      */
     public static ExprVar make(Pos pos, String label, Type type) {
-        return make(pos, label, type, new HashSet<Integer>()); // [HASLab] colorful conditions
+        return make(pos, label, type, new HashSet<Integer>()); // [HASLab] feature annotations
     }
 
     /**
@@ -90,9 +90,9 @@ public final class ExprVar extends ExprHasName implements Clause {
      *            pretty-printing and does not have to be unique)
      * @param type - the type
      */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     public static ExprVar make(Pos pos, String label, Type type, Set<Integer> color) {
-        return new ExprVar(pos, label, type, color); // [HASLab] colorful conditions
+        return new ExprVar(pos, label, type, color); // [HASLab] feature annotations
     }
 
     /** {@inheritDoc} */

@@ -54,7 +54,7 @@ import kodkod.instance.TupleSet;
  * This helper class contains helper routines for reading an A4Solution object
  * from an XML file.
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class A4SolutionReader {
@@ -301,7 +301,7 @@ public final class A4SolutionReader {
         if (field == null)
             field = parent.addTrickyField(Pos.UNKNOWN, isPrivate, null, null, isMeta, new String[] {
                                                                                                     label
-            }, UNIV.join(type), new HashSet<Integer>())[0]; // [HASLab] colorful conditions
+            }, UNIV.join(type), new HashSet<Integer>())[0]; // [HASLab] feature annotations
         TupleSet ts = parseTuples(node, arity);
         expr2ts.put(field, ts);
         return field;

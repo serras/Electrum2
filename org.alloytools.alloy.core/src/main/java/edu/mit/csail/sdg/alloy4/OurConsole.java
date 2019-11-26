@@ -69,7 +69,7 @@ import org.alloytools.util.table.Table;
  * <p>
  * <b>Thread Safety:</b> Can be called only by the AWT event thread.
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class OurConsole extends JScrollPane {

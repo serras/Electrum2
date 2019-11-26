@@ -34,7 +34,7 @@ import edu.mit.csail.sdg.alloy4.Pos;
  * <p>
  * <b>Invariant:</b> this.type==EMPTY && this.errors.size()>0
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class ExprBadJoin extends Expr {
@@ -76,7 +76,7 @@ public final class ExprBadJoin extends Expr {
 
     /** Constructs an ExprBadJoin node. */
     private ExprBadJoin(Pos pos, Pos closingBracket, Expr left, Expr right, JoinableList<Err> errors) {
-        super(pos, closingBracket, (left.ambiguous || right.ambiguous), EMPTY, 0, 0, errors, new HashSet<Integer>()); // [HASLab] colorful conditions
+        super(pos, closingBracket, (left.ambiguous || right.ambiguous), EMPTY, 0, 0, errors, new HashSet<Integer>()); // [HASLab] feature annotations
         this.left = left;
         this.right = right;
     }

@@ -58,7 +58,7 @@ import edu.mit.csail.sdg.ast.VisitReturn;
 import edu.mit.csail.sdg.parser.Macro;
 
 /**
- * author Nuno Macedo // [HASLab] electrum-colorful
+ * author Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
@@ -100,8 +100,9 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
     private final Map<ExprHasName,ExprHasName> oldvar2new;
     private final List<Expr>                   extraFacts;
     private final Map<Integer,Sig>             used_feats;
-    private final PrimSig                      feature_sig = new PrimSig("_Feature", Attr.ABSTRACT, Attr.PRIVATE);
-    private final SubsetSig                    variant_sig = new SubsetSig("_Variant", Collections.singleton(feature_sig), Attr.PRIVATE);
+    public static final String                 feature_prefix = "_F";
+    public static final PrimSig                feature_sig    = new PrimSig("_Feature", Attr.ABSTRACT, Attr.PRIVATE);
+    public static final SubsetSig              variant_sig    = new SubsetSig("_Variant", Collections.singleton(feature_sig), Attr.PRIVATE);
 
     private TranslateColorfulToAlloy() {
         this.decls = new HashMap<Object,Set<Integer>>();
@@ -126,7 +127,7 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
         for (int i : colors) {
             Sig s = used_feats.get(Math.abs(i));
             if (s == null) {
-                s = new PrimSig("_F" + Math.abs(i), feature_sig, Attr.ONE, Attr.PRIVATE);
+                s = new PrimSig(feature_prefix + Math.abs(i), feature_sig, Attr.ONE, Attr.PRIVATE);
                 used_feats.put(Math.abs(i), s);
             }
             args.add(i < 0 ? s.in(variant_sig).not() : s.in(variant_sig));

@@ -24,7 +24,7 @@ import edu.mit.csail.sdg.alloy4.Pos;
  * Immutable; represents a named entity (such as a Field, or a LET or
  * QUANTIFICATION variable, or a function/predicate parameter).
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public abstract class ExprHasName extends Expr {
@@ -36,9 +36,9 @@ public abstract class ExprHasName extends Expr {
     public final String label;
 
     /** Constructs an ExprHasName object */
-    // [HASLab] colorful conditions
+    // [HASLab] feature annotations
     ExprHasName(Pos pos, String label, Type type, Set<Integer> color) {
-        super(pos, null, false, type, 0, 0, null, color); // [HASLab] colorful conditions
+        super(pos, null, false, type, 0, 0, null, color); // [HASLab] feature annotations
         this.label = (label == null ? "" : label);
     }
 

@@ -42,20 +42,19 @@ import edu.mit.csail.sdg.alloy4.Util;
  * This abstract class represents a node that can be browsed in the graphical
  * parse tree viewer.
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public abstract class Browsable {
 
     /**
-     * The presence/absence conditions for this browsable element.
+     * The presence/absence annotations for this browsable element.
      */
     // [HASLab]
     public Set<Integer> color = new HashSet<Integer>();
 
     /**
-     * Paints this browsable element with a (positive or negative) presence
-     * condition.
+     * Paints this browsable element with a presence/absence annotation.
      *
      * @param c
      */
@@ -67,8 +66,7 @@ public abstract class Browsable {
     }
 
     /**
-     * Paints this browsable element with a set of (positive or negative) presence
-     * condition.
+     * Paints this browsable element with a set of presence/absence annotations.
      *
      * @param c
      */

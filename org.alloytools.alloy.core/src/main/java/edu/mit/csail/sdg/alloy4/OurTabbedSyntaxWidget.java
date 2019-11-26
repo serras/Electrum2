@@ -44,7 +44,7 @@ import edu.mit.csail.sdg.alloy4.Listener.Event;
  * <p>
  * <b>Invariant</b>: each tab has distinct file name.
  *
- * @modified Nuno Macedo // [HASLab] electrum-colorful
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class OurTabbedSyntaxWidget {

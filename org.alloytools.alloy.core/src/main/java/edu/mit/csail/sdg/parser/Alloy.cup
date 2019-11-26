@@ -64,7 +64,7 @@ import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.PrimSig;
 
-// @modified: Nuno Macedo // [HASLab] electrum-colorful
+// @modified: Nuno Macedo // [HASLab] electrum-features
 
 //===========================================================================//
 
