@@ -63,9 +63,8 @@ import edu.mit.csail.sdg.parser.Macro;
 
 public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
-    public static final String    feature_prefix = "_F";
-    public static final PrimSig   feature_sig    = new PrimSig("_Feature", Attr.ABSTRACT, Attr.PRIVATE);
-    public static final SubsetSig variant_sig    = new SubsetSig("_Variant", Collections.singleton(feature_sig), Attr.PRIVATE);
+    public static final String feature_label = "_Feature";
+    public static final String variant_label = "_Variant";
 
     public static Pair<Command,Pair<Collection<Sig>,Iterable<Func>>> expandColors(Module world, Command cmd) {
         Map<Object,Set<Integer>> decls = new HashMap<Object,Set<Integer>>();
@@ -91,8 +90,8 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
         Set<Sig> all_sigs = new HashSet<Sig>(trans.oldsig2new.values());
         Iterable<Func> all_funcs = new SafeList<>(trans.oldfunc2new.values());
         all_sigs.addAll(trans.used_feats.values());
-        all_sigs.add(TranslateColorfulToAlloy.feature_sig);
-        all_sigs.add(TranslateColorfulToAlloy.variant_sig);
+        all_sigs.add(trans.feature_sig);
+        all_sigs.add(trans.variant_sig);
         return new Pair<>(new_cmd, new Pair<>(all_sigs, all_funcs));
     }
 
@@ -104,6 +103,8 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
     private final Map<ExprHasName,ExprHasName> oldvar2new;
     private final List<Expr>                   extraFacts;
     private final Map<Integer,Sig>             used_feats;
+    private final PrimSig                      feature_sig = new PrimSig(feature_label, Attr.ABSTRACT, Attr.PRIVATE);
+    private final SubsetSig                    variant_sig = new SubsetSig(variant_label, Collections.singleton(feature_sig), Attr.PRIVATE);
 
     private TranslateColorfulToAlloy() {
         this.decls = new HashMap<Object,Set<Integer>>();
@@ -128,7 +129,7 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
         for (int i : feats) {
             Sig s = used_feats.get(Math.abs(i));
             if (s == null) {
-                s = new PrimSig(feature_prefix + Math.abs(i), feature_sig, Attr.ONE, Attr.PRIVATE);
+                s = new PrimSig(feature_label + Math.abs(i), feature_sig, Attr.ONE, Attr.PRIVATE);
                 used_feats.put(Math.abs(i), s);
             }
             args.add(i < 0 ? s.in(variant_sig).not() : s.in(variant_sig));
