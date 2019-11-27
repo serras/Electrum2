@@ -20,8 +20,10 @@ import static edu.mit.csail.sdg.ast.Type.EMPTY;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import edu.mit.csail.sdg.alloy4.ConstList;
 import edu.mit.csail.sdg.alloy4.ConstList.TempList;
@@ -48,7 +50,9 @@ import edu.mit.csail.sdg.alloy4.Pos;
  * <b>Invariant:</b> type!=EMPTY => sub.mult==0 <br>
  * <b>Invariant:</b> type!=EMPTY => vars.size()>0
  *
- * @modified Eduardo Pessoa, Nuno Macedo // [HASLab] electrum-temporal
+ * @modified Eduardo Pessoa, Nuno Macedo // [HASLab] electrum-temporal,
+ *           electrum-features
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class ExprQt extends Expr {
@@ -157,8 +161,9 @@ public final class ExprQt extends Expr {
     // =============================================================================================================//
 
     /** Constructs a new quantified expression. */
-    private ExprQt(Pos pos, Pos closingBracket, Op op, Type type, ConstList<Decl> decls, Expr sub, boolean ambiguous, long weight, JoinableList<Err> errs) {
-        super(pos, closingBracket, ambiguous, type, 0, weight, errs);
+    // [HASLab] feature annotations
+    private ExprQt(Pos pos, Pos closingBracket, Op op, Type type, ConstList<Decl> decls, Expr sub, boolean ambiguous, long weight, JoinableList<Err> errs, Set<Integer> feats) {
+        super(pos, closingBracket, ambiguous, type, 0, weight, errs, feats); // [HASLab] feature annotations
         this.op = op;
         this.decls = decls;
         this.sub = sub;
@@ -205,6 +210,22 @@ public final class ExprQt extends Expr {
          * @param sub - the body of the expression
          */
         public final Expr make(Pos pos, Pos closingBracket, List<Decl> decls, Expr sub) {
+            return make(pos, closingBracket, decls, sub, new HashSet<Integer>()); // [HASLab] feature annotations
+        }
+
+        /**
+         * Constructs a quantification expression with "this" as the operator.
+         *
+         * @param pos - the position of the "quantifier" in the source file (or null if
+         *            unknown)
+         * @param closingBracket - the position of the "closing bracket" in the source
+         *            file (or null if unknown)
+         * @param decls - the list of variable declarations (each variable must be over
+         *            a set or relation)
+         * @param sub - the body of the expression
+         */
+        // [HASLab] feature annotations
+        public final Expr make(Pos pos, Pos closingBracket, List<Decl> decls, Expr sub, Set<Integer> feats) {
             Type t = this == SUM ? Type.smallIntType() : (this == COMPREHENSION ? Type.EMPTY : Type.FORMULA);
             if (this != SUM)
                 sub = sub.typecheck_as_formula();
@@ -260,7 +281,7 @@ public final class ExprQt extends Expr {
                 errs = sub.errors; // if the vars have errors, then the
                                   // subexpression's errors will be too
                                   // confusing, so let's skip them
-            return new ExprQt(pos, closingBracket, this, t, ConstList.make(decls), sub, ambiguous, weight, errs);
+            return new ExprQt(pos, closingBracket, this, t, ConstList.make(decls), sub, ambiguous, weight, errs, feats); // [HASLab] feature annotations
         }
 
         /** Returns the human readable label for this operator */

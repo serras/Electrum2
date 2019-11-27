@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -15,11 +16,15 @@
 
 package edu.mit.csail.sdg.ast;
 
+import java.util.Set;
+
 import edu.mit.csail.sdg.alloy4.Pos;
 
 /**
  * Immutable; represents a named entity (such as a Field, or a LET or
  * QUANTIFICATION variable, or a function/predicate parameter).
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public abstract class ExprHasName extends Expr {
@@ -31,8 +36,9 @@ public abstract class ExprHasName extends Expr {
     public final String label;
 
     /** Constructs an ExprHasName object */
-    ExprHasName(Pos pos, String label, Type type) {
-        super(pos, null, false, type, 0, 0, null);
+    // [HASLab] feature annotations
+    ExprHasName(Pos pos, String label, Type type, Set<Integer> feats) {
+        super(pos, null, false, type, 0, 0, null, feats); // [HASLab] feature annotations
         this.label = (label == null ? "" : label);
     }
 

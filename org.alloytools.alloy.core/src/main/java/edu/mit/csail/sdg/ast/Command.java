@@ -45,7 +45,8 @@ import edu.mit.csail.sdg.alloy4.Util;
  * <p>
  * <b>Invariant:</b> maxtime == -1 or >= 1
  *
- * @modified Nuno Macedo // [HASLab] electrum-temporal
+ * @modified Nuno Macedo, Chong Liu // [HASLab] electrum-temporal,
+ *           electrum-features
  */
 
 public final class Command extends Browsable {
@@ -114,6 +115,11 @@ public final class Command extends Browsable {
     /** The list of scopes. */
     public final ConstList<CommandScope> scope;
 
+
+    /** The feature scopes. */
+    // [HASLab]
+    public final FeatureScope            feats;
+
     /**
      * This stores a list of Sig whose scope shall be considered "exact", but we may
      * or may not know what its scope is yet.
@@ -135,6 +141,8 @@ public final class Command extends Browsable {
         }
         boolean first = true;
         StringBuilder sb = new StringBuilder(check ? "Check " : "Run ").append(label);
+        sb.append(" with " + feats); // [HASLab] feature scopes
+
         if (overall >= 0 && (bitwidth >= 0 || maxseq >= 0 || scope.size() > 0 || maxtime >= 0)) // [HASLab]
             sb.append(" for ").append(overall).append(" but");
         else if (overall >= 0)
@@ -180,7 +188,7 @@ public final class Command extends Browsable {
      */
     // [HASLab] extended with time scopes
     public Command(boolean check, int overall, int bitwidth, int maxseq, int mintime, int maxtime, Expr formula) throws ErrorSyntax {
-        this(null, null, "", check, overall, bitwidth, maxseq, mintime, maxtime, -1, null, null, formula, null);
+        this(null, null, "", check, overall, bitwidth, maxseq, mintime, maxtime, -1, null, null, null, formula, null);
     }
 
     /**
@@ -197,7 +205,7 @@ public final class Command extends Browsable {
      */
     // [HASLab] extended with time scopes
     public Command(boolean check, int overall, int bitwidth, int maxseq, Expr formula) throws ErrorSyntax {
-        this(null, null, "", check, overall, bitwidth, maxseq, -1, -1, -1, null, null, formula, null);
+        this(null, null, "", check, overall, bitwidth, maxseq, -1, -1, -1, null, null, null, formula, null); // [HASLab] feature and time scopes
     }
 
     /**
@@ -224,8 +232,8 @@ public final class Command extends Browsable {
      *            exact though we may or may not know what the scope is yet
      * @param formula - the formula that must be satisfied by this command
      */
-    // [HASLab] extended with time scopes
-    public Command(Pos pos, Expr e, String label, boolean check, int overall, int bitwidth, int maxseq, int mintime, int maxtime, int expects, Iterable<CommandScope> scope, Iterable<Sig> additionalExactSig, Expr formula, Command parent) {
+    // [HASLab] extended with time and feature scopes
+    public Command(Pos pos, Expr e, String label, boolean check, int overall, int bitwidth, int maxseq, int mintime, int maxtime, int expects, Iterable<CommandScope> scope, FeatureScope feats, Iterable<Sig> additionalExactSig, Expr formula, Command parent) {
         if (pos == null)
             pos = Pos.UNKNOWN;
         this.nameExpr = e;
@@ -241,6 +249,7 @@ public final class Command extends Browsable {
         this.maxstring = (-1);
         this.expects = (expects < 0 ? -1 : (expects > 0 ? 1 : 0));
         this.scope = ConstList.make(scope);
+        this.feats = feats;  // [HASLab] feature scopes
         this.additionalExactScopes = ConstList.make(additionalExactSig);
         this.parent = parent;
     }
@@ -249,27 +258,24 @@ public final class Command extends Browsable {
      * Constructs a new Command object where it is the same as the current object,
      * except with a different formula.
      */
-    // [HASLab] extended with time scopes
     public Command change(Expr newFormula) {
-        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, mintime, maxtime, expects, scope, additionalExactScopes, newFormula, parent);
+        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, mintime, maxtime, expects, scope, feats, additionalExactScopes, newFormula, parent); // [HASLab] time and feature scopes
     }
 
     /**
      * Constructs a new Command object where it is the same as the current object,
      * except with a different scope.
      */
-    // [HASLab] extended with time scopes
     public Command change(ConstList<CommandScope> scope) {
-        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, mintime, maxtime, expects, scope, additionalExactScopes, formula, parent);
+        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, mintime, maxtime, expects, scope, feats, additionalExactScopes, formula, parent); // [HASLab] time and feature scopes
     }
 
     /**
      * Constructs a new Command object where it is the same as the current object,
      * except with a different list of "additional exact sigs".
      */
-    // [HASLab] extended with time scopes
     public Command change(Sig... additionalExactScopes) {
-        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, mintime, maxtime, expects, scope, Util.asList(additionalExactScopes), formula, parent);
+        return new Command(pos, nameExpr, label, check, overall, bitwidth, maxseq, mintime, maxtime, expects, scope, feats, Util.asList(additionalExactScopes), formula, parent); // [HASLab] time and feature scopes
     }
 
     /**

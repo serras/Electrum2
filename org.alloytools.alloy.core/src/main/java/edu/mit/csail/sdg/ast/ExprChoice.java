@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -19,7 +20,9 @@ import static edu.mit.csail.sdg.ast.Type.EMPTY;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.mit.csail.sdg.alloy4.ConstList;
 import edu.mit.csail.sdg.alloy4.ConstList.TempList;
@@ -30,6 +33,8 @@ import edu.mit.csail.sdg.alloy4.Pos;
 
 /**
  * Immutable; represents an unresolved node that has several possibilities.
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class ExprChoice extends Expr {
@@ -101,8 +106,9 @@ public final class ExprChoice extends Expr {
     // ============================================================================================================//
 
     /** Constructs an ExprChoice node. */
-    private ExprChoice(Pos pos, ConstList<Expr> choices, ConstList<String> reasons, Type type, long weight) {
-        super(pos, null, true, type, 0, weight, emptyListOfErrors.make(type == EMPTY ? complain(pos, choices) : null));
+    // [HASLab] feature annotations
+    private ExprChoice(Pos pos, ConstList<Expr> choices, ConstList<String> reasons, Type type, long weight, Set<Integer> feats) {
+        super(pos, null, true, type, 0, weight, emptyListOfErrors.make(type == EMPTY ? complain(pos, choices) : null), feats); // [HASLab] feature annotations
         this.choices = choices;
         this.reasons = reasons;
     }
@@ -111,6 +117,12 @@ public final class ExprChoice extends Expr {
 
     /** Construct an ExprChoice node. */
     public static Expr make(boolean ignoreIntFuns, Pos pos, ConstList<Expr> choices, ConstList<String> reasons) {
+        return make(ignoreIntFuns, pos, choices, reasons, new HashSet<Integer>()); // [HASLab] feature annotations
+    }
+
+    /** Construct an ExprChoice node. */
+    // [HASLab] feature annotations
+    public static Expr make(boolean ignoreIntFuns, Pos pos, ConstList<Expr> choices, ConstList<String> reasons, Set<Integer> feats) {
         if (choices.size() == 0)
             return new ExprBad(pos, "", new ErrorType(pos, "This expression failed to be typechecked."));
         if (choices.size() == 1 && choices.get(0).errors.isEmpty())
@@ -139,16 +151,18 @@ public final class ExprChoice extends Expr {
                     first = false;
                 }
         }
-        return new ExprChoice(pos, choices, reasons, type, weight);
+        return new ExprChoice(pos, choices, reasons, type, weight, feats); // [HASLab] feature annotations
     }
 
     // ============================================================================================================//
+
 
     /**
      * Resolve the list of choices, or return an ExprBad object containing the list
      * of unresolvable ambiguities.
      */
-    private Expr resolveHelper(boolean firstPass, final Type t, List<Expr> choices, List<String> reasons, Collection<ErrorWarning> warns) {
+    // [HASLab] feature annotations
+    private Expr resolveHelper(boolean firstPass, final Type t, List<Expr> choices, List<String> reasons, Collection<ErrorWarning> warns, Set<Integer> feats) {
         List<Expr> ch = new ArrayList<Expr>(choices.size());
         List<String> re = new ArrayList<String>(choices.size());
         // We first prefer exact matches
@@ -205,7 +219,7 @@ public final class ExprChoice extends Expr {
                 ch2 = new ArrayList<Expr>(ch.size());
                 for (Expr c : ch)
                     ch2.add(c.resolve(t, null));
-                return resolveHelper(false, t, ch2, re, warns);
+                return resolveHelper(false, t, ch2, re, warns, feats); // [HASLab] feature annotations
             }
         }
         // If we are down to exactly 1 match, return it
@@ -231,7 +245,7 @@ public final class ExprChoice extends Expr {
                 ans = ans.product(Sig.NONE);
                 arity--;
             }
-            return ExprUnary.Op.NOOP.make(span(), ans);
+            return ExprUnary.Op.NOOP.make(span(), ans, feats); // [HASLab] feature annotations
         }
         // Otherwise, complain!
         String txt;
@@ -253,7 +267,7 @@ public final class ExprChoice extends Expr {
         if (errors.size() > 0)
             return this;
         else
-            return resolveHelper(true, t, choices, reasons, warns);
+            return resolveHelper(true, t, choices, reasons, warns, feats); // [HASLab] feature annotations
     }
 
     // ============================================================================================================//

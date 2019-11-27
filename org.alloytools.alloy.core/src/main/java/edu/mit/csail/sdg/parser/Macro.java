@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -16,6 +17,7 @@
 package edu.mit.csail.sdg.parser;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import edu.mit.csail.sdg.alloy4.ConstList;
@@ -32,9 +34,13 @@ import edu.mit.csail.sdg.ast.ExprCustom;
 import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.parser.CompModule.Context;
 
-/** Immutable; this class represents a macro. */
-
-final class Macro extends ExprCustom {
+/**
+ * Immutable; this class represents a macro.
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-base, electrum-features
+ */
+// [HASLab] visibility
+public final class Macro extends ExprCustom {
 
     /** If nonnull, this is a private macro. */
     final Pos                        isPrivate;
@@ -59,7 +65,7 @@ final class Macro extends ExprCustom {
 
     /** Construct a new Macro object. */
     private Macro(Pos pos, Pos isPrivate, CompModule realModule, String name, List<ExprVar> params, List<Expr> args, Expr body) {
-        super(pos, new ErrorFatal(pos, "Incomplete call on the macro \"" + name + "\""));
+        super(pos, new ErrorFatal(pos, "Incomplete call on the macro \"" + name + "\""), new HashSet<Integer>()); // [HASLab] feature annotations
         this.realModule = realModule;
         this.isPrivate = isPrivate;
         this.name = name;

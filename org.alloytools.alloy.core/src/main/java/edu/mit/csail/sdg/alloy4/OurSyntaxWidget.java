@@ -18,6 +18,8 @@ package edu.mit.csail.sdg.alloy4;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -45,6 +47,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.BoxView;
 import javax.swing.text.Document;
 import javax.swing.text.Element;
+import javax.swing.text.LabelView;
 import javax.swing.text.StyledEditorKit;
 import javax.swing.text.View;
 import javax.swing.text.ViewFactory;
@@ -62,7 +65,7 @@ import edu.mit.csail.sdg.parser.CompUtil;
  * <p>
  * <b>Thread Safety:</b> Can be called only by the AWT event thread
  *
- * @modified Nuno Macedo // [HASLab] electrum-base
+ * @modified Nuno Macedo // [HASLab] electrum-base, electrum-features
  */
 
 public final class OurSyntaxWidget {
@@ -176,6 +179,8 @@ public final class OurSyntaxWidget {
 
                     @Override
                     public View create(Element x) {
+                        if (AbstractDocument.ContentElementName.equals(x.getName())) // [HASLab] strike out annotations
+                            return new StrekableLabellView(x);
                         if (!AbstractDocument.SectionElementName.equals(x.getName()))
                             return defaultFactory.create(x);
                         return new BoxView(x, View.Y_AXIS) { // 30000 is a good
@@ -206,6 +211,52 @@ public final class OurSyntaxWidget {
             pane.setCaretPosition(0);
         }
         doc.do_clearUndo();
+        // [HASLab] add feature annotation actions
+        for (int i = 0; i < 9; i++) {
+            final int k = i;
+            pane.getActionMap().put("alloy_c" + (i + 1), new AbstractAction("alloy_c" + (i + 1)) {
+
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        pane.getDocument().insertString(pane.getSelectionStart(), "" + ((char) (OurSyntaxDocument.O1 + k)), null);
+                        if (pane.getSelectionStart() != pane.getSelectionEnd())
+                            pane.getDocument().insertString(pane.getSelectionEnd(), "" + ((char) (OurSyntaxDocument.O1 + k)), null);
+                        pane.setSelectionEnd(pane.getSelectionEnd() - 1);
+                    } catch (BadLocationException e1) {
+                        // TODO Auto-generated catch block
+                        e1.printStackTrace();
+                    }
+                }
+            });
+            pane.getActionMap().put("alloy_s" + (i + 1), new AbstractAction("alloy_s" + (i + 1)) {
+
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        pane.getDocument().insertString(pane.getSelectionStart(), "" + ((char) (OurSyntaxDocument.E1 + k)), null);
+                        if (pane.getSelectionStart() != pane.getSelectionEnd())
+                            pane.getDocument().insertString(pane.getSelectionEnd(), "" + ((char) (OurSyntaxDocument.E1 + k)), null);
+                        pane.setSelectionEnd(pane.getSelectionEnd() - 1);
+                    } catch (BadLocationException e1) {
+                        // TODO Auto-generated catch block
+                        e1.printStackTrace();
+                    }
+                }
+            });
+        }
+        pane.getActionMap().put("alloy_c0", new AbstractAction("alloy_c0") {
+
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    pane.getDocument().insertString(pane.getSelectionStart(), "" + ("\u24ea"), null);
+                    if (pane.getSelectionStart() != pane.getSelectionEnd())
+                        pane.getDocument().insertString(pane.getSelectionEnd(), "" + ("\u24ea"), null);
+                    pane.setSelectionEnd(pane.getSelectionEnd() - 1);
+                } catch (BadLocationException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
+        });
         pane.getActionMap().put("alloy_copy", new AbstractAction("alloy_copy") {
 
             @Override
@@ -278,6 +329,12 @@ public final class OurSyntaxWidget {
         pane.getInputMap().put(KeyStroke.getKeyStroke('/', OurConsole.menuShortcutKeyMask), "alloy-comment-block");
         pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0), "alloy_tab_insert");
         pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, InputEvent.SHIFT_DOWN_MASK), "alloy_tab_remove");
+        // [HASLab] feature annotation keyboard shortcuts
+        for (int i = 0; i < 9; i++) {
+            pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_1 + i, InputEvent.CTRL_MASK), "alloy_c" + (i + 1));
+            pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_1 + i, InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK), "alloy_s" + (i + 1));
+        }
+        pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_0, InputEvent.CTRL_MASK), "alloy_c0");
         pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_MASK), "alloy_copy");
         pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.CTRL_MASK), "alloy_cut");
         pane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_MASK), "alloy_paste");
@@ -534,10 +591,11 @@ public final class OurSyntaxWidget {
     /**
      * Shade the range of text from start (inclusive) to end (exclusive).
      */
-    void shade(Color color, int start, int end) {
+    // [HASLab] whether to strike out
+    void shade(Color color, boolean strike, int start, int end) {
         int c = color.getRGB() & 0xFFFFFF;
         if (painter == null || (painter.color.getRGB() & 0xFFFFFF) != c)
-            painter = new OurHighlighter(color);
+            painter = new OurHighlighter(color, strike); // [HASLab] whether to strike out
         try {
             pane.getHighlighter().addHighlight(start, end, painter);
         } catch (Throwable ex) {} // exception is okay
@@ -868,4 +926,53 @@ public final class OurSyntaxWidget {
         }
         return null;
     }
+
+
+    /** Retrieve the positive annotations of the selected text in the editor. */
+    // [HASLab]
+    public Pos getPosSelected() {
+        int y1 = 1 + getLineOfOffset(pane.getSelectionStart());
+        int y2 = 1 + getLineOfOffset(pane.getSelectionEnd());
+        int x1 = 1 + pane.getSelectionStart() - getLineStartOffset(y1 - 1);
+        int x2 = pane.getSelectionEnd() - getLineStartOffset(y2 - 1);
+        return new Pos(getFilename(), x1, y1, x2, y2);
+    }
+
+    /** A label view with the ability to strike out text with colors. */
+    // [HASLab]
+    class StrekableLabellView extends LabelView {
+
+        public StrekableLabellView(Element elem) {
+            super(elem);
+        }
+
+        @Override
+        public void paint(Graphics g, Shape allocation) {
+            super.removeAll();
+            super.paint(g, allocation);
+            paintStrikeLine(g, allocation);
+        }
+
+        public void paintStrikeLine(Graphics g, Shape a) {
+            Color c = (Color) getElement().getAttributes().getAttribute("strike-color");
+            if (c != null) {
+                int y = a.getBounds().y + a.getBounds().height - (int) getGlyphPainter().getDescent(this);
+
+                y = y - (int) (getGlyphPainter().getAscent(this) * 0.5f);
+                int x1 = (int) a.getBounds().getX();
+                int x2 = (int) (a.getBounds().getX() + a.getBounds().getWidth());
+
+                Color old = g.getColor();
+                g.setColor(c);
+                g.drawRect(x1, y, x2 - x1, 1);
+                g.setColor(old);
+            }
+        }
+    }
+
+    /** The colors of each of the feature annotations. */
+    // [HASLab]
+    public static Color C[] = {
+                               new Color(255, 225, 205), new Color(255, 205, 225), new Color(205, 255, 225), new Color(225, 205, 255), new Color(225, 255, 205), new Color(205, 225, 255), new Color(225, 255, 225), new Color(225, 225, 255), new Color(255, 225, 225)
+    };
 }

@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.alloy4.ErrorType;
@@ -42,7 +43,8 @@ import edu.mit.csail.sdg.ast.Sig.PrimSig;
  * <b>Invariant:</b> mult==0 || mult==1 || mult==2 <br>
  * <b>Invariant:</b> weight>0
  *
- * @modified Eduardo Pessoa, Nuno Macedo // [HASLab] electrum-temporal
+ * @modified Eduardo Pessoa, Nuno Macedo // [HASLab] electrum-temporal,
+ *           electrum-features
  */
 
 public abstract class Expr extends Browsable {
@@ -122,7 +124,8 @@ public abstract class Expr extends Browsable {
      * @param errors - the list of errors associated with this Expr node (can be
      *            null if there are none)
      */
-    Expr(Pos pos, Pos closingBracket, boolean ambiguous, Type type, int mult, long weight, JoinableList<Err> errors) {
+    // [HASLab] feature annotations
+    Expr(Pos pos, Pos closingBracket, boolean ambiguous, Type type, int mult, long weight, JoinableList<Err> errors, Set<Integer> feats) {
         this.pos = (pos == null ? Pos.UNKNOWN : pos);
         this.closingBracket = (closingBracket == null ? Pos.UNKNOWN : closingBracket);
         this.ambiguous = ambiguous;
@@ -134,10 +137,12 @@ public abstract class Expr extends Browsable {
         this.type = (errors.size() > 0 || type == null) ? EMPTY : type;
         this.weight = (weight > 0) ? weight : 0;
         this.errors = errors;
+        this.feats = feats; // [HASLab] feature annotations
     }
 
     /** This must only be called by Sig's constructor. */
-    Expr(Pos pos, Type type) {
+    // [HASLab] feature annotations
+    Expr(Pos pos, Type type, Set<Integer> feats) {
         this.closingBracket = Pos.UNKNOWN;
         this.ambiguous = false;
         this.errors = emptyListOfErrors;
@@ -145,6 +150,7 @@ public abstract class Expr extends Browsable {
         this.type = (type == null || type == EMPTY) ? Type.make((PrimSig) this) : type;
         this.mult = 0;
         this.weight = 0;
+        this.feats = feats; // [HASLab] feature annotations
     }
 
     /** {@inheritDoc} */
@@ -325,8 +331,12 @@ public abstract class Expr extends Browsable {
     /** Remove the "NOP" in front of an expression (if any). */
     public final Expr deNOP() {
         Expr x = this;
-        while (x instanceof ExprUnary && ((ExprUnary) x).op == ExprUnary.Op.NOOP)
+        while (x instanceof ExprUnary && ((ExprUnary) x).op == ExprUnary.Op.NOOP) {
+            Set<Integer> cs = x.feats;
             x = ((ExprUnary) x).sub;
+            if (!(x instanceof ExprHasName)) // [HASLab] propagate annotations unless call since they are shared throught the AST
+                x.paint(cs);
+        }
         return x;
     }
 

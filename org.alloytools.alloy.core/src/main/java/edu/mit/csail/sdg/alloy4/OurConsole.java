@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -32,6 +33,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.JPanel;
@@ -66,6 +68,8 @@ import org.alloytools.util.table.Table;
  * be displayed in red.
  * <p>
  * <b>Thread Safety:</b> Can be called only by the AWT event thread.
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class OurConsole extends JScrollPane {
@@ -145,6 +149,44 @@ public final class OurConsole extends JScrollPane {
         StyleConstants.setForeground(s, color);
         StyleConstants.setLeftIndent(s, leftIndent);
         StyleConstants.setStrikeThrough(s, strike);
+        return s;
+    }
+
+    /**
+     * Helper method that construct a mutable style with the given font name, font
+     * size, boldness, color, feature coloring, and left indentation.
+     */
+    // [HASLab] positive/negative annotations
+    static MutableAttributeSet style(String fontName, int fontSize, boolean boldness, boolean italic, boolean strike, Color color, Set<Color> pos, Set<Color> neg, int leftIndent) {
+        MutableAttributeSet s = style(fontName, fontSize, boldness, italic, strike, color, leftIndent);
+        // [HASLab] mix all positive annotations
+        Color bg = new Color(255, 255, 255);
+        if (!pos.isEmpty()) {
+            int r = 0, g = 0, b = 0;
+            for (Color c : pos) {
+                r += c.getRed();
+                g += c.getGreen();
+                b += c.getBlue();
+            }
+            int n = pos.size();
+            bg = new Color(Math.min(r / n, 255), Math.min(g / n, 255), Math.min(b / n, 255));
+        }
+        StyleConstants.setBackground(s, bg);
+
+        // [HASLab] mix all negative annotations
+        if (!neg.isEmpty()) {
+            int r = 0, g = 0, b = 0;
+            for (Color c : neg) {
+                r += c.getRed();
+                g += c.getGreen();
+                b += c.getBlue();
+            }
+            int n = neg.size();
+            bg = new Color(Math.min(r / n, 255), Math.min(g / n, 255), Math.min(b / n, 255));
+            s.addAttribute("strike-color", bg);
+        } else {
+            s.removeAttribute("strike-color");
+        }
         return s;
     }
 

@@ -20,7 +20,9 @@ import static edu.mit.csail.sdg.ast.Type.EMPTY;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.alloy4.ErrorSyntax;
@@ -51,7 +53,8 @@ import edu.mit.csail.sdg.ast.Type.ProductType;
  * <b>Invariant:</b> type!=EMPTY => (right.mult==2 => (this.op==IN || this.op is
  * one of the 17 arrow operators))
  *
- * @modified Eduardo Pessoa, Nuno Macedo // [HASLab] electrum-temporal
+ * @modified Eduardo Pessoa, Nuno Macedo // [HASLab] electrum-temporal,
+ *           electrum-feature
  */
 
 public final class ExprBinary extends Expr {
@@ -71,8 +74,9 @@ public final class ExprBinary extends Expr {
     // ============================================================================================================//
 
     /** Constructs a new ExprBinary node. */
-    private ExprBinary(Pos pos, Pos closingBracket, Op op, Expr left, Expr right, Type type, JoinableList<Err> errors) {
-        super(pos, closingBracket, left.ambiguous || right.ambiguous, type, (op.isArrow && (left.mult == 2 || right.mult == 2 || op != Op.ARROW)) ? 2 : 0, left.weight + right.weight, errors);
+    // [HASLab] feature annotations
+    private ExprBinary(Pos pos, Pos closingBracket, Op op, Expr left, Expr right, Type type, JoinableList<Err> errors, Set<Integer> feats) {
+        super(pos, closingBracket, left.ambiguous || right.ambiguous, type, (op.isArrow && (left.mult == 2 || right.mult == 2 || op != Op.ARROW)) ? 2 : 0, left.weight + right.weight, errors, feats); // [HASLab] feature annotations
         this.op = op;
         this.left = left;
         this.right = right;
@@ -299,6 +303,19 @@ public final class ExprBinary extends Expr {
          * @param right - the right hand side expression
          */
         public final Expr make(Pos pos, Pos closingBracket, Expr left, Expr right) {
+            return make(pos, closingBracket, left, right, new HashSet<Integer>()); // [HASLab] feature annotations
+        }
+
+        /**
+         * Constructs a new ExprBinary node.
+         *
+         * @param pos - the original position in the source file (can be null if
+         *            unknown)
+         * @param left - the left hand side expression
+         * @param right - the right hand side expression
+         */
+        // [HASLab] feature annotations
+        public final Expr make(Pos pos, Pos closingBracket, Expr left, Expr right, Set<Integer> feats) {
             switch (this) {
                 case AND :
                     return ExprList.makeAND(pos, closingBracket, left, right);
@@ -461,7 +478,7 @@ public final class ExprBinary extends Expr {
                 errs = errs.make(new ErrorSyntax(left.span(), "Multiplicity expression not allowed here."));
             if ((isArrow && right.mult == 1) || (!isArrow && this != Op.IN && right.mult != 0))
                 errs = errs.make(new ErrorSyntax(right.span(), "Multiplicity expression not allowed here."));
-            return new ExprBinary(pos, closingBracket, this, left, right, type, errs.make(e));
+            return new ExprBinary(pos, closingBracket, this, left, right, type, errs.make(e), feats); // [HASLab] feature annotations
         }
 
         /** Returns the human readable label for this operator. */
@@ -736,7 +753,7 @@ public final class ExprBinary extends Expr {
         Expr right = this.right.resolve(b, warns);
         if (w != null)
             warns.add(w);
-        return (left == this.left && right == this.right) ? this : op.make(pos, closingBracket, left, right);
+        return (left == this.left && right == this.right) ? this : op.make(pos, closingBracket, left, right, feats); // [HASLab] feature annotations
     }
 
     // ============================================================================================================//

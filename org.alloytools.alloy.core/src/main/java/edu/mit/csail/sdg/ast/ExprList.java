@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -19,7 +20,9 @@ import static edu.mit.csail.sdg.ast.Type.EMPTY;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.mit.csail.sdg.alloy4.ConstList;
 import edu.mit.csail.sdg.alloy4.ConstList.TempList;
@@ -35,6 +38,8 @@ import edu.mit.csail.sdg.alloy4.Pos;
  * and other similar list of arugments.
  * <p>
  * <b>Invariant:</b> type!=EMPTY => (all x:args | x.mult==0)
+ *
+ * @modified Nuno Macedo, Chong Liu // [HASLab] electrum-features
  */
 
 public final class ExprList extends Expr {
@@ -108,8 +113,9 @@ public final class ExprList extends Expr {
     // ============================================================================================================//
 
     /** Constructs an ExprList node. */
-    private ExprList(Pos pos, Pos closingBracket, Op op, boolean ambiguous, ConstList<Expr> args, long weight, JoinableList<Err> errs) {
-        super(pos, closingBracket, ambiguous, Type.FORMULA, 0, weight, errs);
+    // [HASLab] feature annotations
+    private ExprList(Pos pos, Pos closingBracket, Op op, boolean ambiguous, ConstList<Expr> args, long weight, JoinableList<Err> errs, Set<Integer> feats) {
+        super(pos, closingBracket, ambiguous, Type.FORMULA, 0, weight, errs, feats); // [HASLab] feature annotations
         this.op = op;
         this.args = args;
     }
@@ -125,16 +131,22 @@ public final class ExprList extends Expr {
         if (x.isSame(ExprConstant.TRUE))
             return;
         if (x instanceof ExprBinary && ((ExprBinary) x).op == ExprBinary.Op.AND) {
+            // [HASLab] this destroys x, so feature annotations must be propagated
+            ((ExprBinary) x).left.paint(x.feats);
+            ((ExprBinary) x).right.paint(x.feats);
             addAND(list, ((ExprBinary) x).left);
             addAND(list, ((ExprBinary) x).right);
             return;
         }
         if (x instanceof ExprList && ((ExprList) x).op == ExprList.Op.AND) {
-            for (Expr y : ((ExprList) x).args)
+            for (Expr y : ((ExprList) x).args) {
+                // [HASLab] this destroys x, so feature annotations must be propagated
+                y.paint(x.feats);
                 addAND(list, y);
+            }
             return;
         }
-        list.add(expr);
+        list.add(x); // [HASLab] denop'ed for annotation consistency (TODO: still needed?)
     }
 
     /**
@@ -146,13 +158,19 @@ public final class ExprList extends Expr {
         if (x.isSame(ExprConstant.FALSE))
             return;
         if (x instanceof ExprBinary && ((ExprBinary) x).op == ExprBinary.Op.OR) {
+            // [HASLab] this destroys x, so feature annotations must be propagated
+            ((ExprBinary) x).left.paint(x.feats);
+            ((ExprBinary) x).right.paint(x.feats);
             addOR(list, ((ExprBinary) x).left);
             addOR(list, ((ExprBinary) x).right);
             return;
         }
         if (x instanceof ExprList && ((ExprList) x).op == ExprList.Op.OR) {
-            for (Expr y : ((ExprList) x).args)
+            for (Expr y : ((ExprList) x).args) {
+                // [HASLab] this destroys x, so feature annotations must be propagated
+                y.paint(x.feats);
                 addOR(list, y);
+            }
             return;
         }
         list.add(expr);
@@ -160,6 +178,12 @@ public final class ExprList extends Expr {
 
     /** Generates a call to a builtin predicate */
     public static ExprList make(Pos pos, Pos closingBracket, Op op, List< ? extends Expr> args) {
+        return make(pos, closingBracket, op, args, new HashSet<Integer>()); // [HASLab] feature annotations
+    }
+
+    /** Generates a call to a builtin predicate */
+    // [HASLab] feature annotations
+    public static ExprList make(Pos pos, Pos closingBracket, Op op, List< ? extends Expr> args, Set<Integer> feats) {
         boolean ambiguous = false;
         JoinableList<Err> errs = emptyListOfErrors;
         TempList<Expr> newargs = new TempList<Expr>(args.size());
@@ -202,7 +226,7 @@ public final class ExprList extends Expr {
             if (commonArity == EMPTY)
                 errs = errs.make(new ErrorType(pos, "The builtin predicate disjoint[] cannot be used among expressions of different arities."));
         }
-        return new ExprList(pos, closingBracket, op, ambiguous, newargs.makeConst(), weight, errs);
+        return new ExprList(pos, closingBracket, op, ambiguous, newargs.makeConst(), weight, errs, feats); // [HASLab] feature annotations
     }
 
     /** Generates the expression (arg1 and arg2) */
@@ -284,7 +308,7 @@ public final class ExprList extends Expr {
             changed = (a != args.get(0) || b != args.get(1) || c != args.get(2));
             newargs.add(a).add(b).add(c);
         }
-        return changed ? make(pos, closingBracket, op, newargs.makeConst()) : this;
+        return changed ? make(pos, closingBracket, op, newargs.makeConst(), feats) : this; // [HASLab] feature annotations
     }
 
     // ============================================================================================================//

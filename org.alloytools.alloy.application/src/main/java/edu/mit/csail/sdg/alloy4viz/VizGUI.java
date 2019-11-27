@@ -79,11 +79,13 @@ import edu.mit.csail.sdg.alloy4.OurBorder;
 import edu.mit.csail.sdg.alloy4.OurCheckbox;
 import edu.mit.csail.sdg.alloy4.OurConsole;
 import edu.mit.csail.sdg.alloy4.OurDialog;
+import edu.mit.csail.sdg.alloy4.OurSyntaxWidget;
 import edu.mit.csail.sdg.alloy4.OurUtil;
 import edu.mit.csail.sdg.alloy4.Runner;
 import edu.mit.csail.sdg.alloy4.Util;
 import edu.mit.csail.sdg.alloy4.Version;
 import edu.mit.csail.sdg.alloy4graph.GraphViewer;
+import edu.mit.csail.sdg.translator.TranslateColorfulToAlloy;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
 import kodkod.ast.Relation;
@@ -97,7 +99,7 @@ import kodkod.util.nodes.PrettyPrinter;
  * <b>Thread Safety:</b> Can be called only by the AWT event thread.
  *
  * @modified: Nuno Macedo, Eduardo Pessoa // [HASLab] electrum-temporal,
- *            electrum-base, electrum-simulator
+ *            electrum-base, electrum-simulator, electrum-features
  */
 
 public final class VizGUI implements ComponentListener {
@@ -704,6 +706,57 @@ public final class VizGUI implements ComponentListener {
             toolbar.add(saveSettingsButton = OurUtil.button("Save", "Save the current theme customization", "images/24_save.gif", doSaveTheme()));
             toolbar.add(saveAsSettingsButton = OurUtil.button("Save As", "Save the current theme customization as a new theme file", "images/24_save.gif", doSaveThemeAs()));
             toolbar.add(resetSettingsButton = OurUtil.button("Reset", "Reset the theme customization", "images/24_settings_close2.gif", doResetTheme()));
+
+            // [HASLab] add a panel depicted the selected product
+            JPanel product = new JPanel() {
+
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void paintComponent(Graphics g) {
+                    List<Ellipse2D> states = new ArrayList<Ellipse2D>();
+
+                    AlloyModel model = getVizState().get(0).getCurrentModel();
+                    AlloyInstance inst = getVizState().get(0).getOriginalInstance();
+                    AlloyType feats = model.hasType(TranslateColorfulToAlloy.feature_sig.label);
+                    AlloySet variant = model.hasSet(TranslateColorfulToAlloy.variant_sig.label, feats);
+
+                    Graphics2D g2 = (Graphics2D) g;
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                    int radius = 14;
+                    int offsety = toolbar.getHeight() / 2;
+                    int offsetx = 90;
+                    int dist = 35;
+                    // identify all features existing in the model (present in the variant or not)
+                    int lmx = inst.type2atoms(feats).size();
+                    Ellipse2D loop = null, last = null;
+                    for (int i = 0; i < lmx; i++) {
+                        AlloyAtom atm = inst.type2atoms(feats).get(i);
+                        int feat = Integer.valueOf(atm.toString().substring(TranslateColorfulToAlloy.feature_prefix.length(), TranslateColorfulToAlloy.feature_prefix.length() + 1));
+                        g2.setStroke(new BasicStroke(3));
+                        Ellipse2D circl = new Ellipse2D.Double(i * dist + offsetx - radius, offsety - radius, 2.0 * radius, 2.0 * radius);
+                        Color tmp = g2.getColor();
+                        // if in current variant, white fill
+                        if (inst.set2atoms(variant).contains(atm)) {
+                            g2.setColor(new Color(255, 255, 255));
+                        } else {
+                            g2.setColor(new Color(120, 120, 120));
+                        }
+                        g2.fill(circl);
+                        g2.setColor(OurSyntaxWidget.C[feat - 1]);
+                        g2.draw(circl);
+                        g2.setColor(tmp);
+                        FontMetrics mets = g2.getFontMetrics();
+                        g2.drawString(feat + "", i * dist + offsetx - (mets.stringWidth(feat + "") / 2), offsety + (mets.getAscent() / 2));
+                        states.add(circl);
+                        g2.setStroke(new BasicStroke(1));
+                        g2.setColor(new Color(0, 0, 0));
+                    }
+                }
+            };
+            toolbar.add(product);
+
         } finally {
             wrap = false;
         }
@@ -931,7 +984,7 @@ public final class VizGUI implements ComponentListener {
                         mySplitTemporal.setVisible(true);
                     } else {
                         mySplitTemporal = null;
-                        myGraphPanel = new VizGraphPanel(myStates.subList(statepanes - 1, statepanes), false); // [HASLab]                        
+                        myGraphPanel = new VizGraphPanel(myStates.subList(statepanes - 1, statepanes), false); // [HASLab]
                     }
                 } else {
                     if (isTrace && !isMeta) { // [HASLab]
@@ -977,7 +1030,7 @@ public final class VizGUI implements ComponentListener {
             left = myCustomPanel;
         } else if (settingsOpen > 1) {
             if (myEvaluatorPanel == null)
-                myEvaluatorPanel = new OurConsole(evaluator, true, "The ", true, "Alloy Evaluator ", false, "allows you to type\nin Alloy expressions and see their values\nat the currently focused state (left-hand side).\nFor example, ", true, "univ", false, " shows the list of all\natoms on the left-hand state.\n(You can press UP and DOWN to recall old inputs).\n"); // [HASLab] 
+                myEvaluatorPanel = new OurConsole(evaluator, true, "The ", true, "Alloy Evaluator ", false, "allows you to type\nin Alloy expressions and see their values\nat the currently focused state (left-hand side).\nFor example, ", true, "univ", false, " shows the list of all\natoms on the left-hand state.\n(You can press UP and DOWN to recall old inputs).\n"); // [HASLab]
             try {
                 evaluator.compute(new File(xmlFileName));
                 myEvaluatorPanel.setCurrent(current); // [HASLab] set evaluator state

@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -19,7 +20,10 @@ import java.awt.BorderLayout;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -27,6 +31,8 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.border.EmptyBorder;
 
 import edu.mit.csail.sdg.alloy4.ConstList;
+import edu.mit.csail.sdg.alloy4.ErrorColor;
+import edu.mit.csail.sdg.alloy4.ErrorSyntax;
 import edu.mit.csail.sdg.alloy4.Listener;
 import edu.mit.csail.sdg.alloy4.OurTree;
 import edu.mit.csail.sdg.alloy4.Pos;
@@ -35,9 +41,40 @@ import edu.mit.csail.sdg.alloy4.Util;
 /**
  * This abstract class represents a node that can be browsed in the graphical
  * parse tree viewer.
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public abstract class Browsable {
+
+    /**
+     * The presence/absence annotations for this browsable element.
+     */
+    // [HASLab]
+    public Set<Integer> feats = new HashSet<Integer>();
+
+    /**
+     * Paints this browsable element with a presence/absence annotation.
+     *
+     * @param c
+     */
+    // [HASLab]
+    public void paint(int c) throws ErrorColor {
+        if (feats.contains(-c))
+            throw new ErrorSyntax(this.pos(), "Negative and positive of same feature: " + this);
+        feats.add(c);
+    }
+
+    /**
+     * Paints this browsable element with a set of presence/absence annotations.
+     *
+     * @param c
+     */
+    // [HASLab]
+    public void paint(Collection<Integer> c) {
+        // TODO: type check
+        feats.addAll(c);
+    }
 
     /**
      * Returns a Pos object representing the position of this Expr.

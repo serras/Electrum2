@@ -20,7 +20,9 @@ import static edu.mit.csail.sdg.alloy4.TableView.clean;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.alloytools.util.table.Table;
 
@@ -41,8 +43,10 @@ import edu.mit.csail.sdg.ast.Attr.AttrType;
 /**
  * Mutable; represents a signature.
  *
- * @modified Eduardo Pessoa, Nuno Macedo // [HASLab] electrum-temporal
+ * @modified Eduardo Pessoa, Nuno Macedo // [HASLab] electrum-temporal,
+ *           electrum-features
  */
+
 public abstract class Sig extends Expr implements Clause {
 
     /** The built-in "univ" signature. */
@@ -255,7 +259,7 @@ public abstract class Sig extends Expr implements Clause {
     /** Constructs a new builtin PrimSig. */
     // [HASLab]
     private Sig(String label, boolean var) {
-        super(Pos.UNKNOWN, null);
+        super(Pos.UNKNOWN, null, new HashSet<Integer>()); // [HASLab] feature annotations
         Expr oneof = ExprUnary.Op.ONEOF.make(null, this);
         ExprVar v = ExprVar.make(null, "this", oneof.type);
         this.decl = new Decl(null, null, null, null, Util.asList(v), oneof); // [HASLab]
@@ -276,7 +280,13 @@ public abstract class Sig extends Expr implements Clause {
 
     /** Constructs a new PrimSig or SubsetSig. */
     private Sig(Type type, String label, Attr... attributes) throws Err {
-        super(AttrType.WHERE.find(attributes), type);
+        this(type, label, new HashSet<Integer>(), attributes); // [HASLab] feature annotations
+    }
+
+    /** Constructs a new PrimSig or SubsetSig. */
+    // [HASLab] feature annotations
+    private Sig(Type type, String label, Set<Integer> feats, Attr... attributes) throws Err {
+        super(AttrType.WHERE.find(attributes), type, feats); // [HASLab] feature annotations
         this.attributes = Util.asList(attributes);
         Expr oneof = ExprUnary.Op.ONEOF.make(null, this);
         ExprVar v = ExprVar.make(null, "this", oneof.type);
@@ -493,7 +503,23 @@ public abstract class Sig extends Expr implements Clause {
          *             SEQIDX, or STRING
          */
         public PrimSig(String label, PrimSig parent, Attr... attributes) throws Err {
-            super(((parent != null && parent.isEnum != null) ? parent.type : null), label, Util.append(attributes, Attr.SUBSIG));
+            this(label, parent, new HashSet<Integer>(), attributes); // [HASLab] feature annotations
+        }
+
+        /**
+         * Constructs a non-builtin sig.
+         *
+         * @param label - the name of this sig (it does not need to be unique)
+         * @param parent - the parent (must not be null, and must not be NONE)
+         * @param attributes - the list of optional attributes such as ABSTRACT, LONE,
+         *            ONE, SOME, SUBSIG, PRIVATE, META, or ENUM
+         * @throws ErrorSyntax if the signature has two or more multiplicities
+         * @throws ErrorType if you attempt to extend the builtin sigs NONE, SIGINT,
+         *             SEQIDX, or STRING
+         */
+        // [HASLab] feature annotations
+        public PrimSig(String label, PrimSig parent, Set<Integer> feats, Attr... attributes) throws Err {
+            super(((parent != null && parent.isEnum != null) ? parent.type : null), label, feats, Util.append(attributes, Attr.SUBSIG)); // [HASLab] feature annotations
             if (parent == SIGINT)
                 throw new ErrorSyntax(pos, "sig " + label + " cannot extend the builtin \"Int\" signature");
             if (parent == SEQIDX)
@@ -627,7 +653,24 @@ public abstract class Sig extends Expr implements Clause {
          * @throws ErrorType if parents only contains NONE
          */
         public SubsetSig(String label, Collection<Sig> parents, Attr... attributes) throws Err {
-            super(getType(label, parents), label, Util.append(attributes, Attr.SUBSET));
+            this(label, parents, new HashSet<Integer>(), attributes); // [HASLab] feature annotations
+        }
+
+        /**
+         * Constructs a subset sig.
+         *
+         * @param label - the name of this sig (it does not need to be unique)
+         * @param parents - the list of parents (if this list is null or empty, we
+         *            assume the caller means UNIV)
+         * @param attributes - the list of optional attributes such as EXACT, SUBSET,
+         *            LONE, ONE, SOME, PRIVATE, or META
+         * @throws ErrorSyntax if the signature has two or more multiplicities
+         * @throws ErrorType if parents only contains NONE
+         */
+        // [HASLab] feature annotations
+        public SubsetSig(String label, Collection<Sig> parents, Set<Integer> feats, Attr... attributes) throws Err {
+            super(getType(label, parents), label, feats, Util.append(attributes, Attr.SUBSET)); // [HASLab] feature annotations
+
             if (isEnum != null)
                 throw new ErrorType(pos, "Subset signature cannot be an enum.");
             boolean exact = false;
@@ -707,9 +750,9 @@ public abstract class Sig extends Expr implements Clause {
         }
 
         /** Constructs a new Field object. */
-        // [HASLab] extended with variable attribute
-        private Field(Pos pos, Pos isPrivate, Pos isMeta, Pos disjoint, Pos disjoint2, Pos isVar, Sig sig, String label, Expr bound) throws Err {
-            super(pos, label, sig.type.product(bound.type));
+        // [HASLab] extended with variable attribute, feature annotations
+        private Field(Pos pos, Pos isPrivate, Pos isMeta, Pos disjoint, Pos disjoint2, Pos isVar, Sig sig, String label, Expr bound, Set<Integer> feats) throws Err {
+            super(pos, label, sig.type.product(bound.type), feats); // [HASLab] feature annotations
             this.defined = bound.mult() == ExprUnary.Op.EXACTLYOF;
             if (sig.builtin)
                 throw new ErrorSyntax(pos, "Builtin sig \"" + sig + "\" cannot have fields.");
@@ -846,8 +889,8 @@ public abstract class Sig extends Expr implements Clause {
                                                          // multiplicity
                                                          // symbol, we assume
                                                          // it's oneOf
-        final Field f = new Field(null, null, null, null, null, null, this, label, bound); // [HASLab]
-        final Decl d = new Decl(null, null, null, null, Arrays.asList(f), bound); // [HASLab]
+        final Field f = new Field(null, null, null, null, null, null, this, label, bound, new HashSet<Integer>()); // [HASLab] variable,  feature annotations
+        final Decl d = new Decl(null, null, null, null, Arrays.asList(f), bound, new HashSet<Integer>()); // [HASLab] variable, feature annotations
         f.decl = d;
         fields.add(d);
         realFields.add(f);
@@ -875,8 +918,8 @@ public abstract class Sig extends Expr implements Clause {
      * @throws ErrorType if the bound is not fully typechecked or is not a
      *             set/relation
      */
-    // [HASLab] extended with variable attribute
-    public final Field[] addTrickyField(Pos pos, Pos isPrivate, Pos isDisjoint, Pos isDisjoint2, Pos isMeta, Pos isVar, String[] labels, Expr bound) throws Err {
+    // [HASLab] extended with variable attribute, feature annotations
+    public final Field[] addTrickyField(Pos pos, Pos isPrivate, Pos isDisjoint, Pos isDisjoint2, Pos isMeta, Pos isVar, String[] labels, Expr bound, Set<Integer> feats) throws Err {
         bound = bound.typecheck_as_set();
         if (bound.ambiguous)
             bound = bound.resolve_as_set(null);
@@ -886,9 +929,10 @@ public abstract class Sig extends Expr implements Clause {
                                                          // symbol, we assume
                                                          // it's oneOf
         final Field[] f = new Field[labels.length];
+        feats.addAll(this.feats); // [HASLab] fields inherit parent presence conditions
         for (int i = 0; i < f.length; i++)
-            f[i] = new Field(pos, isPrivate, isMeta, isDisjoint, isDisjoint2, isVar, this, labels[i], bound); // [HASLab]
-        final Decl d = new Decl(isPrivate, isDisjoint, isDisjoint2, isVar, Arrays.asList(f), bound); // [HASLab]
+            f[i] = new Field(pos, isPrivate, isMeta, isDisjoint, isDisjoint2, isVar, this, labels[i], bound, feats); // [HASLab] variable, feature annotations
+        final Decl d = new Decl(isPrivate, isDisjoint, isDisjoint2, isVar, Arrays.asList(f), bound, feats); // [HASLab] variable, feature annotations
         for (int i = 0; i < f.length; i++) {
             f[i].decl = d;
             realFields.add(f[i]);
@@ -926,8 +970,8 @@ public abstract class Sig extends Expr implements Clause {
             bound = bound.resolve_as_set(null);
         if (bound.mult() != ExprUnary.Op.EXACTLYOF)
             bound = ExprUnary.Op.EXACTLYOF.make(null, bound);
-        final Field f = new Field(pos, isPrivate, isMeta, null, null, null, this, label, bound); // [HASLab]
-        final Decl d = new Decl(null, null, null, null, Arrays.asList(f), bound); // [HASLab]
+        final Field f = new Field(pos, isPrivate, isMeta, null, null, null, this, label, bound, new HashSet<Integer>()); // [HASLab] variable, feature annotations
+        final Decl d = new Decl(null, null, null, null, Arrays.asList(f), bound, new HashSet<Integer>()); // [HASLab] [HASLab] variable, feature annotations
         f.decl = d;
         fields.add(d);
         realFields.add(f);

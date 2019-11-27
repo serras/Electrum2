@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -28,16 +29,24 @@ import javax.swing.text.JTextComponent;
  * Graphica highlighter.
  * <p>
  * <b>Thread Safety:</b> Can be called only by the AWT event thread.
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class OurHighlighter implements Highlighter.HighlightPainter {
 
     /** The color to use when drawing highlights. */
-    public final Color color;
+    public final Color   color;
 
-    /** Construct a highlighter with the given color. */
-    public OurHighlighter(Color color) {
-        this.color = color;
+    /** Whether to strike out rather than highlight. */
+    // [HASLab]
+    public final boolean strike;
+
+    /** Construct a highlighter with the given color and whether to strike out. */
+    // [HASLab]
+    public OurHighlighter(Color color, boolean strike) {
+        this.color = color; // [HASLab] annotation color
+        this.strike = strike;
     }
 
     /** This method is called by Swing to draw highlights. */
@@ -52,7 +61,11 @@ public final class OurHighlighter implements Highlighter.HighlightPainter {
                 // same line (Note: furthermore, if start==end, then we draw all
                 // the way to the right edge)
                 Rectangle r = a.union(b);
-                gr.fillRect(r.x, r.y, (r.width <= 1 ? (box.x + box.width - r.x) : r.width), r.height);
+                // [HASLab] whether to strike out rather than highlight
+                if (!strike)
+                    gr.fillRect(r.x, r.y, (r.width <= 1 ? (box.x + box.width - r.x) : r.width), r.height);
+                else
+                    gr.fillRect(r.x, r.y + (r.height / 2), (r.width <= 1 ? (box.x + box.width - r.x) : r.width), 2);
             } else {
                 // Multiple lines; (Note: on first line we'll draw from "start"
                 // and extend to rightmost)

@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -16,7 +17,9 @@
 package edu.mit.csail.sdg.ast;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.alloy4.ErrorSyntax;
@@ -30,6 +33,8 @@ import edu.mit.csail.sdg.alloy4.Util;
  * Immutable; represents an expression of the form (let a=b | x).
  * <p>
  * <b>Invariant:</b> type!=EMPTY => (var.type.unambiguos() && sub.mult==0)
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class ExprLet extends Expr {
@@ -80,8 +85,9 @@ public final class ExprLet extends Expr {
     // =============================================================================================================//
 
     /** Constructs a LET expression. */
-    private ExprLet(Pos pos, ExprVar var, Expr expr, Expr sub, JoinableList<Err> errs) {
-        super(pos, null, expr.ambiguous || sub.ambiguous, sub.type, 0, var.weight + expr.weight + sub.weight, errs);
+    // [HASLab] feature annotations
+    private ExprLet(Pos pos, ExprVar var, Expr expr, Expr sub, JoinableList<Err> errs, Set<Integer> feats) {
+        super(pos, null, expr.ambiguous || sub.ambiguous, sub.type, 0, var.weight + expr.weight + sub.weight, errs, feats); // [HASLab] feature annotations
         this.var = var;
         this.expr = expr;
         this.sub = sub;
@@ -99,6 +105,20 @@ public final class ExprLet extends Expr {
      *            "var" as a free variable)
      */
     public static Expr make(Pos pos, ExprVar var, Expr expr, Expr sub) {
+        return make(pos, var, expr, sub, new HashSet<Integer>()); // [HASLab] feature annotations
+    }
+
+    /**
+     * Constructs a LET expression.
+     *
+     * @param pos - the position of the '=' token in the original Alloy model (or
+     *            null if unknown)
+     * @param var - the LET variable
+     * @param sub - the body of the LET expression (which may or may not contain
+     *            "var" as a free variable)
+     */
+    // [HASLab] feature annotations
+    public static Expr make(Pos pos, ExprVar var, Expr expr, Expr sub, Set<Integer> feats) {
         if (expr.ambiguous)
             expr = expr.resolve(expr.type, null);
         JoinableList<Err> errs = var.errors.make(expr.errors).make(sub.errors);
@@ -110,7 +130,7 @@ public final class ExprLet extends Expr {
             if (/* [AM] var.type.is_int()!=expr.type.is_int()|| */
             var.type.is_bool != expr.type.is_bool || var.type.arity() != expr.type.arity())
                 errs = errs.make(new ErrorType(var.span(), "This variable has type " + var.type + " but is bound to a value of type " + expr.type));
-        return new ExprLet(pos, var, expr, sub, errs);
+        return new ExprLet(pos, var, expr, sub, errs, feats); // [HASLab] feature annotations
     }
 
     // =============================================================================================================//
@@ -125,7 +145,7 @@ public final class ExprLet extends Expr {
         Expr newSub = sub.resolve(p, warns);
         if (warns != null && !newSub.hasVar(var))
             warns.add(new ErrorWarning(var.pos, "This variable is unused."));
-        return (sub == newSub) ? this : make(pos, var, expr, newSub);
+        return (sub == newSub) ? this : make(pos, var, expr, newSub, feats); // [HASLab] feature annotations
     }
 
     // =============================================================================================================//

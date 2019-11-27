@@ -24,6 +24,7 @@ import static edu.mit.csail.sdg.ast.Sig.UNIV;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -53,7 +54,8 @@ import kodkod.instance.TupleSet;
  * This helper class contains helper routines for reading an A4Solution object
  * from an XML file.
  *
- * @modified: Nuno Macedo, Eduardo Pessoa // [HASLab] electrum-temporal
+ * @modified: Nuno Macedo, Eduardo Pessoa // [HASLab] electrum-temporal,
+ *            electrum-features
  */
 
 public final class A4SolutionReader {
@@ -303,10 +305,10 @@ public final class A4SolutionReader {
                 break;
             }
         if (field == null)
-            // [HASLab]
+            // [HASLab] variable, feature annotations
             field = parent.addTrickyField(Pos.UNKNOWN, isPrivate, null, null, isMeta, isVar, new String[] {
                                                                                                            label
-            }, UNIV.join(type))[0];
+            }, UNIV.join(type), new HashSet<Integer>())[0]; // [HASLab] feature annotations
         TupleSet ts = parseTuples(node, arity);
         expr2ts.put(field, ts);
         return field;

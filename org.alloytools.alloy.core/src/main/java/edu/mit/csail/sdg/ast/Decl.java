@@ -16,18 +16,52 @@
 
 package edu.mit.csail.sdg.ast;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.mit.csail.sdg.alloy4.ConstList;
+import edu.mit.csail.sdg.alloy4.ErrorColor;
+import edu.mit.csail.sdg.alloy4.ErrorSyntax;
 import edu.mit.csail.sdg.alloy4.Pos;
 
 /**
  * Immutable; this declaration binds a list of names to an expression.
  *
- * @modified Nuno Macedo // [HASLab] electrum-temporal
+ * @modified Nuno Macedo // [HASLab] electrum-temporal, electrum-features
  */
 
 public final class Decl {
+
+    /**
+     * The presence/absence annotations for this element.
+     */
+    // [HASLab]
+    public Set<Integer> feats = new HashSet<Integer>();
+
+    /**
+     * Paints this element with a presence/absence annotation.
+     *
+     * @param c
+     */
+    // [HASLab]
+    public void paint(int c) throws ErrorColor {
+        if (feats.contains(-c))
+            throw new ErrorSyntax(Pos.UNKNOWN, "Negative and positive of same feature: " + this);
+        feats.add(c);
+    }
+
+    /**
+     * Paints this element with a set of presence/absence annotations.
+     *
+     * @param c
+     */
+    // [HASLab]
+    public void paint(Collection<Integer> c) {
+        // TODO: type check
+        feats.addAll(c);
+    }
 
     /**
      * If nonnull, then this decl is private (and this.isPrivate is the location of
@@ -82,6 +116,14 @@ public final class Decl {
      */
     // [HASLab]: extended with variable declarations for fields
     public Decl(Pos isPrivate, Pos disjoint, Pos disjoint2, Pos isVar, List< ? extends ExprHasName> names, Expr expr) {
+        this(isPrivate, disjoint, disjoint2, isVar, names, expr, new HashSet<Integer>()); // [HASLab] feature annotations
+    }
+
+    /**
+     * This constructs a declaration; the list of names must not be empty.
+     */
+    // [HASLab] extended with variable declarations for fields, feature annotations
+    public Decl(Pos isPrivate, Pos disjoint, Pos disjoint2, Pos isVar, List< ? extends ExprHasName> names, Expr expr, Set<Integer> feats) {
         if (names.size() == 0)
             throw new NullPointerException();
         this.isPrivate = isPrivate;
@@ -90,6 +132,7 @@ public final class Decl {
         this.disjoint2 = disjoint2;
         this.names = ConstList.make(names);
         this.expr = expr;
+        this.feats = feats; // [HASLab] feature annotations
     }
 
     /** Return the first variable in this declaration. */

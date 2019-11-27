@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -26,8 +27,13 @@ import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.alloy4.Listener;
 import edu.mit.csail.sdg.alloy4.Pair;
 import edu.mit.csail.sdg.alloy4.SafeList;
+import edu.mit.csail.sdg.parser.Macro;
 
-/** This interface represents an Alloy module. */
+/**
+ * This interface represents an Alloy module.
+ *
+ * @modified Nuno Macedo, Chong Liu // [HASLab] electrum-base
+ */
 
 public interface Module extends Clause {
 
@@ -75,6 +81,12 @@ public interface Module extends Clause {
      * Return an unmodifiable list of all functions in this module.
      */
     public SafeList<Func> getAllFunc();
+
+    /**
+     * Return an unmodifiable list of all macros in this module.
+     */
+    // [HASLab]
+    public SafeList<Macro> getAllMacro();
 
     /**
      * Return an unmodifiable list of all assertions in this module.

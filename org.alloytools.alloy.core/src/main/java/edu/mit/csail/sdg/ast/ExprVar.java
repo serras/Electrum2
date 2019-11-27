@@ -1,4 +1,5 @@
 /* Alloy Analyzer 4 -- Copyright (c) 2006-2009, Felix Chang
+ * Electrum -- Copyright (c) 2015-present, Nuno Macedo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -17,7 +18,9 @@ package edu.mit.csail.sdg.ast;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.alloy4.ErrorWarning;
@@ -28,6 +31,8 @@ import edu.mit.csail.sdg.alloy4.TableView;
  * Immutable; represents a LET or QUANTIFICATION variable in the AST.
  * <p>
  * <b>Invariant:</b> type!=EMPTY => (type==expr.type && !expr.ambiguous)
+ *
+ * @modified Nuno Macedo // [HASLab] electrum-features
  */
 
 public final class ExprVar extends ExprHasName implements Clause {
@@ -46,8 +51,9 @@ public final class ExprVar extends ExprHasName implements Clause {
     }
 
     /** Constructs an ExprVar object */
-    private ExprVar(Pos pos, String label, Type type) {
-        super(pos, label, type);
+    // [HASLab] feature annotations
+    private ExprVar(Pos pos, String label, Type type, Set<Integer> feats) {
+        super(pos, label, type, feats); // [HASLab] feature annotations
     }
 
     /**
@@ -59,7 +65,7 @@ public final class ExprVar extends ExprHasName implements Clause {
      *            pretty-printing and does not have to be unique)
      */
     public static ExprVar make(Pos pos, String label) {
-        return new ExprVar(pos, label, Type.EMPTY);
+        return new ExprVar(pos, label, Type.EMPTY, new HashSet<Integer>()); // [HASLab] feature annotations
     }
 
     /**
@@ -72,7 +78,21 @@ public final class ExprVar extends ExprHasName implements Clause {
      * @param type - the type
      */
     public static ExprVar make(Pos pos, String label, Type type) {
-        return new ExprVar(pos, label, type);
+        return make(pos, label, type, new HashSet<Integer>()); // [HASLab] feature annotations
+    }
+
+    /**
+     * Constructs an ExprVar variable with the given type
+     *
+     * @param pos - the original position in the source file (can be null if
+     *            unknown)
+     * @param label - the label for this variable (it is only used for
+     *            pretty-printing and does not have to be unique)
+     * @param type - the type
+     */
+    // [HASLab] feature annotations
+    public static ExprVar make(Pos pos, String label, Type type, Set<Integer> feats) {
+        return new ExprVar(pos, label, type, feats); // [HASLab] feature annotations
     }
 
     /** {@inheritDoc} */
