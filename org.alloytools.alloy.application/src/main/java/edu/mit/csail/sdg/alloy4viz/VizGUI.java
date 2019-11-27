@@ -718,8 +718,8 @@ public final class VizGUI implements ComponentListener {
 
                     AlloyModel model = getVizState().get(0).getCurrentModel();
                     AlloyInstance inst = getVizState().get(0).getOriginalInstance();
-                    AlloyType feats = model.hasType(TranslateColorfulToAlloy.feature_sig.label);
-                    AlloySet variant = model.hasSet(TranslateColorfulToAlloy.variant_sig.label, feats);
+                    AlloyType feats = model.hasType(TranslateColorfulToAlloy.feature_label);
+                    AlloySet variant = model.hasSet(TranslateColorfulToAlloy.variant_label, feats);
 
                     Graphics2D g2 = (Graphics2D) g;
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -733,7 +733,7 @@ public final class VizGUI implements ComponentListener {
                     Ellipse2D loop = null, last = null;
                     for (int i = 0; i < lmx; i++) {
                         AlloyAtom atm = inst.type2atoms(feats).get(i);
-                        int feat = Integer.valueOf(atm.toString().substring(TranslateColorfulToAlloy.feature_prefix.length(), TranslateColorfulToAlloy.feature_prefix.length() + 1));
+                        int feat = Integer.valueOf(atm.toString().substring(TranslateColorfulToAlloy.feature_label.length()));
                         g2.setStroke(new BasicStroke(3));
                         Ellipse2D circl = new Ellipse2D.Double(i * dist + offsetx - radius, offsety - radius, 2.0 * radius, 2.0 * radius);
                         Color tmp = g2.getColor();
