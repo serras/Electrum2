@@ -63,6 +63,10 @@ import edu.mit.csail.sdg.parser.Macro;
 
 public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
+    public static final String    feature_prefix = "_F";
+    public static final PrimSig   feature_sig    = new PrimSig("_Feature", Attr.ABSTRACT, Attr.PRIVATE);
+    public static final SubsetSig variant_sig    = new SubsetSig("_Variant", Collections.singleton(feature_sig), Attr.PRIVATE);
+
     public static Pair<Command,Pair<Collection<Sig>,Iterable<Func>>> expandColors(Module world, Command cmd) {
         Map<Object,Set<Integer>> decls = new HashMap<Object,Set<Integer>>();
 
@@ -100,9 +104,6 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
     private final Map<ExprHasName,ExprHasName> oldvar2new;
     private final List<Expr>                   extraFacts;
     private final Map<Integer,Sig>             used_feats;
-    public static final String                 feature_prefix = "_F";
-    public static final PrimSig                feature_sig    = new PrimSig("_Feature", Attr.ABSTRACT, Attr.PRIVATE);
-    public static final SubsetSig              variant_sig    = new SubsetSig("_Variant", Collections.singleton(feature_sig), Attr.PRIVATE);
 
     private TranslateColorfulToAlloy() {
         this.decls = new HashMap<Object,Set<Integer>>();
