@@ -472,7 +472,7 @@ public final class ExprUnary extends Expr {
             warns.add(w1);
         if (w2 != null)
             warns.add(w2);
-        return (sub == this.sub) ? this : op.make(pos, sub, null, weight - (this.sub.weight));
+        return (sub == this.sub) ? this : op.make(pos, sub, null, weight - (this.sub.weight), feats); // [HASLab] feature annotations
     }
 
     // ============================================================================================================//

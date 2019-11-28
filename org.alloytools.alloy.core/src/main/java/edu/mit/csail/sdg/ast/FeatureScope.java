@@ -45,7 +45,6 @@ public class FeatureScope {
     /** True iff the scope is an exact scope. */
     public final boolean       isExact;
 
-
     /**
      * Construct a new FeatureScope object.
      *

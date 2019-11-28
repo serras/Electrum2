@@ -77,21 +77,24 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
         for (Sig s : world.getAllReachableSigs())
             trans.resolveFields(s);
 
-        trans.resolveFunc(world.getAllFunc());
+        trans.resolveFunc(world);
 
         trans.resolveMacro(world.getAllMacro());
 
         trans.resolveAssert(world.getAllAssertions());
 
+        Expr nf = cmd.formula.accept(trans);
+
         trans.processFeatScope(cmd.feats);
 
-        Expr nf = cmd.formula.accept(trans);
         Command new_cmd = cmd.change(nf.and(ExprList.make(Pos.UNKNOWN, Pos.UNKNOWN, ExprList.Op.AND, trans.extraFacts)));
         Set<Sig> all_sigs = new HashSet<Sig>(trans.oldsig2new.values());
         Iterable<Func> all_funcs = new SafeList<>(trans.oldfunc2new.values());
-        all_sigs.addAll(trans.used_feats.values());
-        all_sigs.add(trans.feature_sig);
-        all_sigs.add(trans.variant_sig);
+        if (!trans.used_feats.isEmpty()) {
+            all_sigs.addAll(trans.used_feats.values());
+            all_sigs.add(trans.feature_sig);
+            all_sigs.add(trans.variant_sig);
+        }
         return new Pair<>(new_cmd, new Pair<>(all_sigs, all_funcs));
     }
 
@@ -140,10 +143,13 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
     private void processFeatScope(FeatureScope feats) {
         Expr res;
         Set<Integer> scp = new HashSet<Integer>(feats.feats);
-        if (feats.isExact)
-            for (int i = 1; i < 9; i++)
-                if (used_feats.containsKey(Math.abs(i)) && !scp.contains(Math.abs(i)))
+        if (feats.isExact) {
+            Set<Integer> lst = new HashSet<Integer>(used_feats.keySet());
+            lst.addAll(scp);
+            for (Integer i : lst)
+                if (!scp.contains(Math.abs(i)))
                     scp.add(-i);
+        }
         extraFacts.add(presenceCondition(scp));
     }
 
@@ -160,29 +166,49 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
         return res;
     }
 
-    private void resolveFunc(SafeList<Func> fs) {
-        for (Func f : fs) {
-            context.push(f.feats);
-            decls.put(f, f.feats);
-            Expr nr = f.isPred ? null : f.returnDecl.accept(this);
-            List<Decl> nds = new ArrayList<Decl>();
-            for (Decl d : f.decls)
-                nds.add(new Decl(d.isPrivate, d.disjoint, d.disjoint2, d.isVar, d.names, d.expr.accept(this)));
-            Func nf = new Func(f.pos, f.isPrivate, f.label, nds, nr, f.getBody());
-            oldfunc2new.put(f, nf);
-            context.pop();
-        }
+    private void resolveFunc(Module worlds) {
+        for (Module world : worlds.getAllReachableModules())
+            for (Func f : world.getAllFunc()) {
+                for (Decl d : f.decls)
+                    for (ExprHasName v : d.names)
+                        decls.put(v, Collections.EMPTY_SET);
 
-        for (Func f : fs) {
-            context.push(f.feats);
-            Expr e = f.getBody();
-            if (!f.isPred && !e.deNOP().feats.isEmpty())
-                throw new ErrorSyntax(f.pos, "Cannot mark function body: " + f);
-            if (f.isPred)
-                e = ExprList.make(f.getBody().pos, f.getBody().pos, ExprList.Op.AND, Collections.singletonList(f.getBody()));
-            oldfunc2new.get(f).setBody(e.accept(this));
-            context.pop();
-        }
+                context.push(f.feats);
+                decls.put(f, f.feats);
+                Expr nr = f.isPred ? null : f.returnDecl.accept(this);
+                List<Decl> nds = new ArrayList<Decl>();
+                for (Decl d : f.decls)
+                    nds.add(new Decl(d.isPrivate, d.disjoint, d.disjoint2, d.isVar, d.names, d.expr.accept(this)));
+                Func nf = new Func(f.pos, f.isPrivate, f.label, nds, nr, f.getBody());
+                oldfunc2new.put(f, nf);
+                context.pop();
+
+                for (Decl d : f.decls)
+                    for (ExprHasName v : d.names)
+                        decls.remove(v);
+
+            }
+
+        for (Module world : worlds.getAllReachableModules())
+            for (Func f : world.getAllFunc()) {
+                for (Decl d : f.decls)
+                    for (ExprHasName v : d.names)
+                        decls.put(v, Collections.EMPTY_SET);
+
+                context.push(f.feats);
+                Expr e = f.getBody();
+                if (!f.isPred && !e.deNOP().feats.isEmpty())
+                    throw new ErrorSyntax(f.pos, "Cannot mark function body: " + f);
+                if (f.isPred)
+                    e = ExprList.make(f.getBody().pos, f.getBody().pos, ExprList.Op.AND, Collections.singletonList(f.getBody()));
+                oldfunc2new.get(f).setBody(e.accept(this));
+                context.pop();
+
+                for (Decl d : f.decls)
+                    for (ExprHasName v : d.names)
+                        decls.remove(v);
+
+            }
     }
 
     private void resolveMacro(SafeList<Macro> fs) {
@@ -219,28 +245,29 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
             List<Attr> atts = new ArrayList<Attr>();
             atts.addAll(s.attributes);
-            for (int i = 0; i < s.attributes.size() && ef == null; i++) {
-                Attr a = s.attributes.get(i);
-                if (a != null) {
-                    switch (a.type) {
-                        case LONE :
-                            atts.set(i, null);
-                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.lone(), se.no());
-                            break;
-                        case ONE :
-                            atts.set(i, null);
-                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.one(), se.no());
-                            break;
-                        case SOME :
-                            atts.set(i, null);
-                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.some(), se.no());
-                            break;
-                        default :
-                            ;
+            if (!s.feats.isEmpty()) {
+                for (int i = 0; i < s.attributes.size() && ef == null; i++) {
+                    Attr a = s.attributes.get(i);
+                    if (a != null) {
+                        switch (a.type) {
+                            case LONE :
+                                atts.set(i, null);
+                                ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.lone(), se.no());
+                                break;
+                            case ONE :
+                                atts.set(i, null);
+                                ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.one(), se.no());
+                                break;
+                            case SOME :
+                                atts.set(i, null);
+                                ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.some(), se.no());
+                                break;
+                            default :
+                                ;
+                        }
                     }
                 }
             }
-
             ns = new PrimSig(s.label, parent, atts.toArray(new Attr[atts.size()]));
         } else {
             Set<Sig> parents = new HashSet<Sig>();
@@ -255,36 +282,38 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
 
             List<Attr> atts = new ArrayList<Attr>();
             atts.addAll(s.attributes);
-            for (int i = 0; i < s.attributes.size() && ef == null; i++) {
-                Attr a = s.attributes.get(i);
-                if (a != null) {
-                    switch (a.type) {
-                        case LONE :
-                            atts.set(i, null);
-                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.lone(), se.no());
-                            break;
-                        case ONE :
-                            atts.set(i, null);
-                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.one(), se.no());
-                            break;
-                        case SOME :
-                            atts.set(i, null);
-                            ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.some(), se.no());
-                            break;
-                        default :
-                            ;
+            if (!s.feats.isEmpty()) {
+                for (int i = 0; i < s.attributes.size() && ef == null; i++) {
+                    Attr a = s.attributes.get(i);
+                    if (a != null) {
+                        switch (a.type) {
+                            case LONE :
+                                atts.set(i, null);
+                                ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.lone(), se.no());
+                                break;
+                            case ONE :
+                                atts.set(i, null);
+                                ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.one(), se.no());
+                                break;
+                            case SOME :
+                                atts.set(i, null);
+                                ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), se.some(), se.no());
+                                break;
+                            default :
+                                ;
+                        }
                     }
                 }
-
             }
 
             ns = new SubsetSig(s.label, parents, atts.toArray(new Attr[atts.size()]));
         }
 
-        if (ef == null)
+        if (ef == null && !s.feats.isEmpty()) {
             ef = se -> ExprITE.make(s.pos, presenceCondition(s.feats), ExprConstant.TRUE, se.no());
+            extraFacts.add(ef.apply(ns));
+        }
 
-        extraFacts.add(ef.apply(ns));
         oldsig2new.put(s, ns);
         oldvar2new.put(s.decl.get(), ns.decl.get());
         context.pop();
@@ -301,14 +330,19 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
                 decls.put(v, f.feats);
             }
             Expr ne = f.expr.accept(this);
-            Expr nt = f.expr.type().toExpr().accept(this);
-            if (f.expr.type().arity() == 1)
-                nt = nt.setOf();
+            Expr nt;
+            if (!f.feats.isEmpty()) {
+                nt = f.expr.type().toExpr().accept(this);
+                if (f.expr.type().arity() == 1)
+                    nt = nt.setOf();
+            } else
+                nt = ne;
             String[] names = vs.toArray(new String[vs.size()]);
-            Field[] nf = ns.addTrickyField(f.names.get(0).pos, f.isPrivate, f.disjoint, f.disjoint2, f.isVar, ((Field) f.names.get(0)).isMeta, names, nt, f.feats);
+            Field[] nf = ns.addTrickyField(f.names.get(0).pos, f.isPrivate, f.disjoint, f.disjoint2, ((Field) f.names.get(0)).isMeta, f.isVar, names, nt, f.feats);
             for (int i = 0; i < f.names.size(); i++) {
                 oldfield2new.put((Field) f.names.get(i), nf[i]);
-                extraFacts.add(ExprITE.make(f.names.get(i).pos, presenceCondition(f.feats), ns.decl.get().join(nf[i]).in(ne).forAll(ns.decl), nf[i].no()));
+                if (!f.feats.isEmpty())
+                    extraFacts.add(ExprITE.make(f.names.get(i).pos, presenceCondition(f.feats), ns.decl.get().join(nf[i]).in(ne).forAll(ns.decl), nf[i].no()));
             }
             context.pop();
         }
@@ -427,9 +461,11 @@ public final class TranslateColorfulToAlloy extends VisitReturn<Expr> {
             throw new ErrorSyntax("Cannot mark let expressions");
 
         context.push(x.feats);
+        decls.put(x.var, Collections.EMPTY_SET);
         ExprVar v = (ExprVar) x.var.accept(this);
         Expr e = x.expr.accept(this);
         Expr s = x.sub.accept(this);
+        decls.remove(v);
         context.pop();
         return ExprLet.make(x.pos, v, e, s);
     }
