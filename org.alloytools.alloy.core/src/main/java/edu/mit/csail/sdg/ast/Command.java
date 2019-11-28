@@ -98,7 +98,6 @@ public final class Command extends Browsable {
     /** The list of scopes. */
     public final ConstList<CommandScope> scope;
 
-
     /** The feature scopes. */
     // [HASLab]
     public final FeatureScope            feats;

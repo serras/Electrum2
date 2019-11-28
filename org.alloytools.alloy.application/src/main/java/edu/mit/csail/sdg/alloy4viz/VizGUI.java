@@ -668,28 +668,29 @@ public final class VizGUI implements ComponentListener {
                     int dist = 35;
                     // identify all features existing in the model (present in the variant or not)
                     int lmx = inst.type2atoms(feats).size();
-                    Ellipse2D loop = null, last = null;
                     for (int i = 0; i < lmx; i++) {
-                        AlloyAtom atm = inst.type2atoms(feats).get(i);
-                        int feat = Integer.valueOf(atm.toString().substring(TranslateColorfulToAlloy.feature_label.length()));
-                        g2.setStroke(new BasicStroke(3));
-                        Ellipse2D circl = new Ellipse2D.Double(i * dist + offsetx - radius, offsety - radius, 2.0 * radius, 2.0 * radius);
-                        Color tmp = g2.getColor();
-                        // if in current variant, white fill
-                        if (inst.set2atoms(variant).contains(atm)) {
-                            g2.setColor(new Color(255, 255, 255));
-                        } else {
-                            g2.setColor(new Color(120, 120, 120));
-                        }
-                        g2.fill(circl);
-                        g2.setColor(OurSyntaxWidget.C[feat - 1]);
-                        g2.draw(circl);
-                        g2.setColor(tmp);
-                        FontMetrics mets = g2.getFontMetrics();
-                        g2.drawString(feat + "", i * dist + offsetx - (mets.stringWidth(feat + "") / 2), offsety + (mets.getAscent() / 2));
-                        states.add(circl);
-                        g2.setStroke(new BasicStroke(1));
-                        g2.setColor(new Color(0, 0, 0));
+                        try {
+                            AlloyAtom atm = inst.type2atoms(feats).get(i);
+                            int feat = Integer.valueOf(atm.toString().substring(TranslateColorfulToAlloy.feature_label.length()));
+                            g2.setStroke(new BasicStroke(3));
+                            Ellipse2D circl = new Ellipse2D.Double(i * dist + offsetx - radius, offsety - radius, 2.0 * radius, 2.0 * radius);
+                            Color tmp = g2.getColor();
+                            // if in current variant, white fill
+                            if (inst.set2atoms(variant).contains(atm)) {
+                                g2.setColor(new Color(255, 255, 255));
+                            } else {
+                                g2.setColor(new Color(120, 120, 120));
+                            }
+                            g2.fill(circl);
+                            g2.setColor(OurSyntaxWidget.C[feat - 1]);
+                            g2.draw(circl);
+                            g2.setColor(tmp);
+                            FontMetrics mets = g2.getFontMetrics();
+                            g2.drawString(feat + "", i * dist + offsetx - (mets.stringWidth(feat + "") / 2), offsety + (mets.getAscent() / 2));
+                            states.add(circl);
+                            g2.setStroke(new BasicStroke(1));
+                            g2.setColor(new Color(0, 0, 0));
+                        } catch (NumberFormatException e) {} // currently, if there are no features
                     }
                 }
             };
