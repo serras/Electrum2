@@ -5,6 +5,7 @@ import static edu.mit.csail.sdg.alloy4.A4Preferences.AutoVisualize;
 import static edu.mit.csail.sdg.alloy4whole.AlloyLanguageServerUtil.*;
 import static edu.mit.csail.sdg.alloy4.A4Preferences.CoreGranularity;
 import static edu.mit.csail.sdg.alloy4.A4Preferences.CoreMinimization;
+import static edu.mit.csail.sdg.alloy4.A4Preferences.DecomposedPref;
 import static edu.mit.csail.sdg.alloy4.A4Preferences.ImplicitThis;
 import static edu.mit.csail.sdg.alloy4.A4Preferences.InferPartialInstance;
 import static edu.mit.csail.sdg.alloy4.A4Preferences.NoOverflow;
@@ -883,6 +884,7 @@ class AlloyTextDocumentService implements TextDocumentService, WorkspaceService,
 		opt.coreMinimization = CoreMinimization.get();
 		opt.inferPartialInstance = InferPartialInstance.get();
 		opt.coreGranularity = CoreGranularity.get();
+		opt.decomposed_mode = DecomposedPref.get().ordinal(); // [HASLab]
 
 		log("cwd :" + Paths.get("").toAbsolutePath());
 
@@ -1427,14 +1429,15 @@ class AlloyTextDocumentService implements TextDocumentService, WorkspaceService,
 
         @Override
         public String compute(Object input) {
-            final String arg = (String) input;
+            final String[] arg = (String[]) input; // [HASLab] simulator
             //OurUtil.show(frame);
             if (WorkerEngine.isBusy())
                 throw new RuntimeException("Alloy4 is currently executing a SAT solver command. Please wait until that command has finished.");
             //SimpleCallback1 cb = new SimpleCallback1(SimpleGUI.this, viz, log, VerbosityPref.get().ordinal(), latestAlloyVersionName, latestAlloyVersion);
             WorkerCallback cb = getVizWorkerCallback();
             SimpleTask2 task = new SimpleTask2();
-            task.filename = arg;
+            task.filename = arg[0]; // [HASLab] simulator
+            task.index = Integer.valueOf(arg[1]); // [HASLab] simulator
             try {
                 if (AlloyCore.isDebug())
                     WorkerEngine.runLocally(task, cb);
@@ -1448,14 +1451,14 @@ class AlloyTextDocumentService implements TextDocumentService, WorkspaceService,
                 //log.logDivider();
                 //log.flush();
                 doStop(2);
-                return arg;
+                return arg[0]; // [HASLab]
             }
            /* subrunningTask = 2;
             runmenu.setEnabled(false);
             runbutton.setVisible(false);
             showbutton.setEnabled(false);
             stopbutton.setVisible(true);*/
-            return arg;
+            return arg[0]; // [HASLab]
         }
     };
     
@@ -1471,10 +1474,10 @@ class AlloyTextDocumentService implements TextDocumentService, WorkspaceService,
                 filename = ((File) input).getAbsolutePath();
                 return "";
             }
-            if (!(input instanceof String))
+            if (!(input instanceof String[]))
                 return "";
-            final String str = (String) input;
-            if (str.trim().length() == 0)
+            final String[] strs = (String[]) input; // [HASLab] state arg
+            if (strs[0].trim().length() == 0)
                 return ""; // Empty line
             Module root = null;
             A4Solution ans = null;
@@ -1509,13 +1512,13 @@ class AlloyTextDocumentService implements TextDocumentService, WorkspaceService,
                 throw new ErrorFatal("Failed to read or parse the XML file.");
             }
             try {
-                Expr e = CompUtil.parseOneExpression_fromString(root, str);
+                Expr e = CompUtil.parseOneExpression_fromString(root, strs[0]); // [HASLab]
                 if (AlloyCore.isDebug() && VerbosityPref.get() == Verbosity.FULLDEBUG) {
                     SimInstance simInst = SimpleGUI.convert(root, ans);
                     if (simInst.wasOverflow())
                         return simInst.visitThis(e).toString() + " (OF)";
                 }
-                return ans.eval(e);
+                return ans.eval(e, Integer.valueOf(strs[1])).toString(); // [HASLab] eval state
             } catch (HigherOrderDeclException ex) {
                 throw new ErrorType("Higher-order quantification is not allowed in the evaluator.");
             }
